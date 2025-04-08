@@ -1,0 +1,55 @@
+{
+  "name": "decommerce",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "scripts": {
+    "build:tsc": "tsc",
+    "start": "node dist/index.js",
+    "dev:tsx": "tsx watch src/index.ts",
+    "dev": "tsup --watch --onSuccess \"node dist/index.js\"",
+    "build": "tsup",
+    "watch": "nodemon --exec tsx watch src/index.ts",
+    "lint": "eslint .",
+    "lint:fix": "eslint --fix .",
+    "format": "prettier --write \"src/**/*.ts\""
+  },
+  "keywords": [
+    "discord",
+    "bot",
+    "decommerce",
+    "ecommerce",
+    "discord ecommerce",
+    "discord ecommerce bot",
+    "shop",
+    "order",
+    "orders",
+    "product",
+    "products",
+    "inventory",
+    "inventory management",
+    "inventory management bot",
+    "cart",
+    "checkout",
+    "typescript"
+  ],
+  "author": "Fazlul Haque",
+  "license": "ISC",
+  "description": "Discord bot for ecommerce",
+  "dependencies": {
+    "discord.js": "^14.18.0",
+    "dotenv": "^16.3.1",
+    "mongoose": "^8.13.2"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.24.0",
+    "@types/node": "^22.14.0",
+    "eslint": "^9.24.0",
+    "globals": "^16.0.0",
+    "prettier": "^3.5.3",
+    "tsup": "^8.4.0",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.29.0",
+    "zod": "^3.24.2"
+  }
+}

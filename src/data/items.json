@@ -1,0 +1,40 @@
+{
+  "items": [
+    {
+      "name": "Netflix Premium 1 Month",
+      "description": "Price: 250 BDT",
+      "emoji": "<:NetflixLogo:1307381700774461521>",
+      "price": 250
+    },
+    {
+      "name": "Spotify 3 Month",
+      "description": "Price: 299 BDT",
+      "price": 299
+    },
+    {
+      "name": "Spotify 6 Month",
+      "description": "Price: 550 BDT",
+      "price": 550
+    },
+    {
+      "name": "Spotify 12 Month",
+      "description": "Price: 800 BDT",
+      "price": 800
+    },
+    {
+      "name": "XBox Gamepass Shared 3 Years",
+      "description": "Price: 499 BDT",
+      "price": 499
+    },
+    {
+      "name": "Xbox Gamepass Shared 6 Years",
+      "description": "Price: 799 BDT",
+      "price": 799
+    },
+    {
+      "name": "YouTube Premium 1 Year",
+      "description": "Price: 999 BDT",
+      "price": 999
+    }
+  ]
+}
