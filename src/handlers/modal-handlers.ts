@@ -2,8 +2,9 @@ import { MessageFlags, type ModalSubmitInteraction } from 'discord.js';
 import type { ProductDocument } from '@/db/product.dal';
 import { ProductDAL } from '@/db/product.dal';
 import { z } from 'zod';
-import { getGenericSuccessEmbed } from '@/utils/genericEmbeds';
+import { getGenericErrorEmbed, getGenericSuccessEmbed } from '@/utils/genericEmbeds';
 import mongoose from 'mongoose';
+import { PaymentMethodDAL, type PaymentMethodData } from '@/db/payment-method.dal';
 
 // Define the product schema with Zod
 const productSchema = z.object({
@@ -108,6 +109,49 @@ export const handleAddOrUpdateProductModal = async (
   } catch {
     await interaction.reply({
       content: `There was an error while ${operationMode} the product!`,
+    });
+  }
+};
+
+export const handleAddPaymentMethodModal = async (interaction: ModalSubmitInteraction) => {
+  const name = interaction.fields.getTextInputValue('name');
+  const emoji = interaction.fields.getTextInputValue('emoji');
+  const guildId = interaction.guildId;
+  if (!guildId) {
+    throw new Error('Guild ID is required');
+  }
+  const operationMode = 'added';
+  try {
+    const paymentMethodData: PaymentMethodData = {
+      name,
+      emoji,
+      guildId,
+    };
+
+    const paymentMethod = await PaymentMethodDAL.createPaymentMethod(paymentMethodData);
+    if (!paymentMethod) {
+      throw new Error('Failed to add payment method');
+    }
+
+    await interaction.reply({
+      embeds: [
+        getGenericSuccessEmbed(
+          `Payment method ${operationMode} successfully`,
+          `Successfully ${operationMode} payment method: ${emoji} ${name}`,
+        ),
+      ],
+    });
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    await interaction.reply({
+      embeds: [
+        getGenericErrorEmbed(`Failed`, errorMessage).addFields([
+          {
+            name: '\u200b',
+            value: 'user ```/list-payment-methods``` to see your payment methods',
+          },
+        ]),
+      ],
     });
   }
 };

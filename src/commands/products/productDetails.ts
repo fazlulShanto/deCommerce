@@ -3,6 +3,7 @@ import { EmbedBuilder, SlashCommandBuilder, type ChatInputCommandInteraction } f
 import { ProductDAL } from '../../db/product.dal';
 import type { SlashCommand } from '../../config/command-handler';
 import { getGenericErrorEmbed } from '@/utils/genericEmbeds';
+import { MAX_AUTOCOMPLETE_CHOICES } from '@/utils/constants';
 
 const commandName = 'product-details';
 
@@ -30,10 +31,12 @@ export const ProductDetailsCommand: SlashCommand = {
       product.name.toLowerCase().includes(focusedValue),
     );
     // Format choices for Discord
-    const choices = products.map((product) => ({
-      name: product.name,
-      value: product._id.toString(),
-    }));
+    const choices = products
+      .map((product) => ({
+        name: product.name,
+        value: product._id.toString(),
+      }))
+      .slice(0, MAX_AUTOCOMPLETE_CHOICES);
 
     await interaction.respond(choices);
   },
@@ -63,8 +66,7 @@ export const ProductDetailsCommand: SlashCommand = {
         return;
       }
       const embed = new EmbedBuilder()
-        .setTitle('Product List')
-        .setDescription('List of added products')
+        .setTitle('Product Details')
         .addFields(
           {
             name: 'Product ID',

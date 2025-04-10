@@ -10,6 +10,7 @@ import {
 
 import type { SlashCommand } from '../../config/command-handler';
 import { ProductDAL } from '@/db/product.dal';
+import { MAX_AUTOCOMPLETE_CHOICES } from '@/utils/constants';
 
 const commandName = 'update-product';
 
@@ -34,10 +35,12 @@ export const UpdateProductCommand: SlashCommand = {
       product.name.toLowerCase().includes(focusedValue),
     );
     // Format choices for Discord
-    const choices = products.map((product) => ({
-      name: product.name,
-      value: product._id.toString(), // or product._id if you prefer to use IDs
-    }));
+    const choices = products
+      .map((product) => ({
+        name: product.name,
+        value: product._id.toString(), // or product._id if you prefer to use IDs
+      }))
+      .slice(0, MAX_AUTOCOMPLETE_CHOICES);
 
     await interaction.respond(choices);
   },

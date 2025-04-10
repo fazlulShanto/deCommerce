@@ -1,6 +1,9 @@
 /* eslint-disable @typescript-eslint/no-floating-promises -- just a try catch */
-import type { Interaction } from 'discord.js';
-import { handleAddOrUpdateProductModal } from '@/handlers/modal-handlers';
+import { ActionRowBuilder, StringSelectMenuBuilder, type Interaction } from 'discord.js';
+import {
+  handleAddOrUpdateProductModal,
+  handleAddPaymentMethodModal,
+} from '@/handlers/modal-handlers';
 
 const handleInteractionCreate = async (interaction: Interaction) => {
   if (interaction.isChatInputCommand()) {
@@ -31,34 +34,64 @@ const handleInteractionCreate = async (interaction: Interaction) => {
   }
 
   if (interaction.isModalSubmit()) {
-    if (interaction.customId.startsWith('updateProductModal_')) {
-      await handleAddOrUpdateProductModal(interaction, true);
-      return;
-    }
+    try {
+      if (interaction.customId.startsWith('updateProductModal_')) {
+        await handleAddOrUpdateProductModal(interaction, true);
+        return;
+      }
 
-    if (interaction.customId === 'addProductModal') {
-      await handleAddOrUpdateProductModal(interaction, false);
-      return;
-    }
+      if (interaction.customId === 'addProductModal') {
+        await handleAddOrUpdateProductModal(interaction, false);
+        return;
+      }
 
-    interaction.reply({
-      content: 'There was an error while submitting the modal!',
-    });
+      if (interaction.customId === 'addPaymentMethodModal') {
+        await handleAddPaymentMethodModal(interaction);
+        return;
+      }
+
+      interaction.reply({
+        content: 'There was an error while submitting the modal!',
+      });
+    } catch (error) {
+      console.error('Error handling modal submission:', error);
+      interaction.reply({
+        content: 'There was an error while processing your request.',
+        ephemeral: true,
+      });
+    }
   }
 
   if (interaction.isStringSelectMenu()) {
     // const command = interaction.client.commands.get(interaction.customId);
     console.log('interaction.values', interaction.values, 'custom_id', interaction.customId);
-    // if (!command) return;
-    // try {
-    //   command.execute(interaction as unknown as ChatInputCommandInteraction);
-    // } catch (error) {
-    // console.error(error);
-    interaction.reply({
-      content: 'You selected: ' + interaction.values.join(', '),
-      //   ephemeral: true,
+
+    // disable the button
+    const updatedComponents = interaction.message.components.map((row) => {
+      const newComponents = row.components.map((component) => {
+        if (component.customId === interaction.customId) {
+          return StringSelectMenuBuilder.from(component as unknown as StringSelectMenuBuilder)
+            .setDisabled(true)
+            .setPlaceholder(interaction.values.join(', '));
+        }
+        return component;
+      });
+      return new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
+        newComponents as StringSelectMenuBuilder[],
+      );
     });
-    // }
+
+    await interaction.update({
+      content: 'You selected: ' + interaction.values.join(', '),
+      components: updatedComponents,
+    });
+
+    // Use the correct method to send messages
+    if (interaction.channel && 'send' in interaction.channel) {
+      await interaction.channel.send({
+        content: 'now pay us',
+      });
+    }
   }
 };
 

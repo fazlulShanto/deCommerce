@@ -1,0 +1,3 @@
+export const MAX_AUTOCOMPLETE_CHOICES = 25;
+export const MAX_EMBED_FIELDS = 25;
+export const MAX_ALLOWED_PAYMENT_METHODS = 5;

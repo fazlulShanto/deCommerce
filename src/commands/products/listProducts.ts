@@ -2,6 +2,7 @@ import { EmbedBuilder, SlashCommandBuilder, type ChatInputCommandInteraction } f
 import { ProductDAL } from '../../db/product.dal';
 import type { SlashCommand } from '../../config/command-handler';
 import { getGenericErrorEmbed } from '@/utils/genericEmbeds';
+import { MAX_AUTOCOMPLETE_CHOICES } from '@/utils/constants';
 
 const commandName = 'list-products';
 
@@ -35,20 +36,22 @@ export const ListProductsCommand: SlashCommand = {
         .setTitle('Product List')
         .setDescription('List of added products')
         .addFields(
-          products.map((product) => ({
-            name: '',
-            value:
-              '```Product ID: ' +
-              product._id.toString() +
-              '\n' +
-              'Product Name: ' +
-              product.name +
-              '\n' +
-              'Price: ' +
-              product.price +
-              '\n' +
-              '```',
-          })),
+          products
+            .map((product) => ({
+              name: '',
+              value:
+                '```Product ID: ' +
+                product._id.toString() +
+                '\n' +
+                'Product Name: ' +
+                product.name +
+                '\n' +
+                'Price: ' +
+                product.price +
+                '\n' +
+                '```',
+            }))
+            .slice(0, MAX_AUTOCOMPLETE_CHOICES),
         )
         .setColor('Blue');
 

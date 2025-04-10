@@ -6,6 +6,10 @@ import ListProductsCommand from './products/listProducts';
 import { DeleteProductCommand } from './products/deleteProduct';
 import { UpdateProductCommand } from './products/updateProduct';
 import ProductDetailsCommand from './products/productDetails';
+import AddPaymentMethodCommand from './payments/addPaymentMethod';
+import { DeletePaymentMethodCommand } from './payments/deletePaymentMethod';
+import ListPaymentMethodsCommand from './payments/listPaymentMethod';
+
 export const botCommands = [
   PingCommand,
   ServerInfoCommand,
@@ -15,4 +19,7 @@ export const botCommands = [
   DeleteProductCommand,
   UpdateProductCommand,
   ProductDetailsCommand,
+  AddPaymentMethodCommand,
+  DeletePaymentMethodCommand,
+  ListPaymentMethodsCommand,
 ];

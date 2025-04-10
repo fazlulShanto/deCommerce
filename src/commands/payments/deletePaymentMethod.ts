@@ -1,21 +1,21 @@
 import type { AutocompleteInteraction } from 'discord.js';
 import { EmbedBuilder, SlashCommandBuilder, type ChatInputCommandInteraction } from 'discord.js';
-import { ProductDAL, type ProductDocument } from '../../db/product.dal';
 import type { SlashCommand } from '../../config/command-handler';
 import { getGenericErrorEmbed } from '@/utils/genericEmbeds';
 import { MAX_AUTOCOMPLETE_CHOICES } from '@/utils/constants';
+import { PaymentMethodDAL } from '@/db/payment-method.dal';
 
-const commandName = 'delete-product';
+const commandName = 'delete-payment-method';
 
-export const DeleteProductCommand: SlashCommand = {
+export const DeletePaymentMethodCommand: SlashCommand = {
   name: commandName,
-  description: 'Delete a product from the inventory',
+  description: 'Delete a payment method',
   data: new SlashCommandBuilder()
     .setName(commandName)
-    .setDescription('Delete a product from the inventory')
+    .setDescription('Delete a payment method')
     .addStringOption((option) =>
       option
-        .setName('product-name')
+        .setName('payment-method-name')
         .setDescription('The name of the product to delete')
         .setAutocomplete(true)
         .setRequired(true),
@@ -23,19 +23,19 @@ export const DeleteProductCommand: SlashCommand = {
   autocomplete: async (interaction: AutocompleteInteraction) => {
     const focusedValue = interaction.options.getFocused().toLowerCase();
     const guildId = interaction.guildId;
-    const productList = await ProductDAL.getProductsByGuildId(guildId + '');
-    const products = productList.filter((product) =>
-      product.name.toLowerCase().includes(focusedValue),
-    );
-    // Format choices for Discord
-    const choices = products
+    const paymentMethodList = await PaymentMethodDAL.getPaymentMethodsByGuildId(guildId + '');
+    if (!paymentMethodList) {
+      throw new Error('No payment methods found');
+    }
+    const filteredPaymentMethods = paymentMethodList
+      .filter((paymentMethod) => paymentMethod.name.toLowerCase().includes(focusedValue))
       .map((product) => ({
         name: product.name,
         value: product.name, // or product._id if you prefer to use IDs
       }))
       .slice(0, MAX_AUTOCOMPLETE_CHOICES);
 
-    await interaction.respond(choices);
+    await interaction.respond(filteredPaymentMethods);
   },
 
   requiredPermissions: [],
@@ -44,14 +44,14 @@ export const DeleteProductCommand: SlashCommand = {
     try {
       await interaction.deferReply();
       const guildId = interaction.guildId;
-      const productName = interaction.options.getString('product-name');
+      const paymentMethodName = interaction.options.getString('payment-method-name');
       if (!guildId) {
         throw new Error('Guild ID is required');
       }
-      const productList = await ProductDAL.getProductsByGuildId(guildId);
-      const product = productList.find((p) => p.name === productName) as ProductDocument;
+      const paymentList = await PaymentMethodDAL.getPaymentMethodsByGuildId(guildId);
+      const selectedPayment = paymentList.find((p) => p.name === paymentMethodName);
 
-      if (!product) {
+      if (!selectedPayment) {
         await interaction.followUp({
           embeds: [
             getGenericErrorEmbed(
@@ -63,26 +63,21 @@ export const DeleteProductCommand: SlashCommand = {
         return;
       }
 
-      const deletedProduct = await ProductDAL.deleteSingleProduct(product._id.toString(), guildId);
-      if (!deletedProduct) {
+      const deletedPaymentMethod = await PaymentMethodDAL.deleteSinglePaymentMethod(
+        selectedPayment._id.toString(),
+        guildId,
+      );
+      if (!deletedPaymentMethod) {
         throw new Error('Failed to delete product');
       }
 
       const embed = new EmbedBuilder()
-        .setTitle('Deleted Product: ' + deletedProduct.name)
+        .setTitle('Deleted Payment Method: ' + deletedPaymentMethod.name)
         .setDescription('Deleted Product details')
         .addFields([
           {
-            name: 'Product ID: ' + deletedProduct._id.toString(),
-            value:
-              '```' +
-              'Product Name: ' +
-              deletedProduct.name +
-              '\n' +
-              'Price: ' +
-              deletedProduct.price +
-              '\n' +
-              '```',
+            name: 'Payment method ID: ' + deletedPaymentMethod._id.toString(),
+            value: '```' + 'Pyament method Name: ' + deletedPaymentMethod.name + '```',
           },
         ])
         .setColor('Red');
@@ -91,9 +86,9 @@ export const DeleteProductCommand: SlashCommand = {
         embeds: [embed],
       });
     } catch (error) {
-      console.error('Error fetching products:', error);
+      console.error('Error fetching payment methods:', error);
       await interaction.reply({
-        content: 'There was an error while fetching the products!',
+        content: 'There was an error while fetching the payment methods!',
         ephemeral: true,
       });
     }
