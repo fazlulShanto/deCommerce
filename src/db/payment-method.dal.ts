@@ -10,20 +10,7 @@ const paymentMethodSchema = new mongoose.Schema(
   {
     timestamps: true,
   },
-).pre('save', async function (next) {
-  const Model = this.constructor;
-  // @ts-expect-error idk
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-  const count = await (Model.countDocuments() as Promise<number>);
-
-  if (count >= MAX_ALLOWED_PAYMENT_METHODS) {
-    const err = new Error(`you can add maximum  ${MAX_ALLOWED_PAYMENT_METHODS}  Payment method.`);
-    err.name = 'DocumentLimitReached';
-    return next(err); // Prevent save
-  }
-
-  next();
-});
+);
 
 const PaymentMethodModel = mongoose.model<PaymentMethodDocument>(
   'payment_methods',
@@ -75,7 +62,7 @@ const PaymentMethodDAL = {
   },
 
   getPaymentMethodsByGuildId: async (guildId: string): Promise<PaymentMethodDocument[]> => {
-    return PaymentMethodModel.find({ guildId });
+    return PaymentMethodModel.find({ guildId }) ;
   },
 
   getPaymentMethodById: async (id: string): Promise<PaymentMethodDocument | null> => {

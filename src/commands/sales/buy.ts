@@ -9,8 +9,9 @@ import {
 } from 'discord.js';
 import type { SlashCommand } from '../../config/command-handler';
 import { ProductDAL } from '@/db/product.dal';
-import { getGenericErrorEmbed } from '@/utils/genericEmbeds';
+import { getGenericErrorEmbed, getGenericSuccessEmbed } from '@/utils/genericEmbeds';
 import { MAX_AUTOCOMPLETE_CHOICES } from '@/utils/constants';
+import { PaymentMethodDAL } from '@/db/payment-method.dal';
 
 const commandName = 'buy';
 
@@ -52,6 +53,13 @@ export const BuyCommand: SlashCommand = {
   execute: async (interaction: ChatInputCommandInteraction) => {
     try {
       await interaction.deferReply();
+      const paymentMethods = await PaymentMethodDAL.getPaymentMethodsByGuildId(interaction.guildId + '');
+      if (!paymentMethods || !Array.isArray(paymentMethods) || paymentMethods.length === 0) {
+        await interaction.followUp({
+          embeds: [getGenericSuccessEmbed('Payment Method', 'Please contact the server owner to  about the payment method.')],
+        });
+        return;
+      }
       const productId = interaction.options.getString('product-name');
 
       if (!productId) {
@@ -85,21 +93,19 @@ export const BuyCommand: SlashCommand = {
         .setDescription('Please select the payment method you would like to use.')
         .setColor('Blue');
 
-      const confirm = new ButtonBuilder()
-        .setCustomId('confirm')
-        .setLabel('Confirm Ban')
-        .setStyle(ButtonStyle.Danger);
+        const paymentMethodsButtons  = paymentMethods.map((paymentMethod) => {
+          return new ButtonBuilder()
+            .setCustomId(['payment_method',paymentMethod.name , paymentMethod._id.toString()].join('_'))
+            .setLabel(paymentMethod.name)
+            .setStyle(ButtonStyle.Primary);
+        });
 
-      const cancel = new ButtonBuilder()
-        .setCustomId('cancel')
-        .setLabel('Cancel')
-        .setStyle(ButtonStyle.Secondary);
 
-      const row = new ActionRowBuilder<ButtonBuilder>().addComponents(cancel, confirm);
+      const paymentMethodsButtonRow = new ActionRowBuilder<ButtonBuilder>().addComponents( ...paymentMethodsButtons);
 
       await interaction.followUp({
         embeds: [embed],
-        components: [row],
+        components: [paymentMethodsButtonRow],
       });
     } catch (error) {
       console.error('Error fetching products:', error);
