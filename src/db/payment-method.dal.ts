@@ -5,12 +5,20 @@ const paymentMethodSchema = new mongoose.Schema(
   {
     name: String,
     emoji: { type: String, default: '' },
+    qrCodeImage: { type: String, default: '' },
     guildId: String,
   },
   {
     timestamps: true,
   },
-);
+).pre('save', async function (next) {
+  const model = this.constructor as typeof PaymentMethodModel;
+  const count = await model.countDocuments({ guildId: this.guildId });
+  if (count >= MAX_ALLOWED_PAYMENT_METHODS) {
+    throw new Error('Maximum number of payment methods reached');
+  }
+  next();
+});
 
 const PaymentMethodModel = mongoose.model<PaymentMethodDocument>(
   'payment_methods',
@@ -62,7 +70,7 @@ const PaymentMethodDAL = {
   },
 
   getPaymentMethodsByGuildId: async (guildId: string): Promise<PaymentMethodDocument[]> => {
-    return PaymentMethodModel.find({ guildId }) ;
+    return PaymentMethodModel.find({ guildId });
   },
 
   getPaymentMethodById: async (id: string): Promise<PaymentMethodDocument | null> => {
