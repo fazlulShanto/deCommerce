@@ -10,7 +10,7 @@ import {
 import type { SlashCommand } from '../../config/command-handler';
 import { ProductDAL } from '@/db/product.dal';
 import { getGenericErrorEmbed, getGenericSuccessEmbed } from '@/utils/genericEmbeds';
-import { MAX_AUTOCOMPLETE_CHOICES } from '@/utils/constants';
+import { BOT_COMMAND_BUTTON_IDS, MAX_AUTOCOMPLETE_CHOICES } from '@/utils/constants';
 import { PaymentMethodDAL } from '@/db/payment-method.dal';
 
 const commandName = 'buy';
@@ -117,7 +117,12 @@ export const BuyCommand: SlashCommand = {
       const paymentMethodsButtons = paymentMethods.map((paymentMethod) => {
         return new ButtonBuilder()
           .setCustomId(
-            ['payment_method', paymentMethod.name, paymentMethod._id.toString()].join('_'),
+            [
+              BOT_COMMAND_BUTTON_IDS.PAYMENT_METHOD,
+              product._id.toString(),
+              paymentMethod._id.toString(),
+              interaction.user.id,
+            ].join('_'),
           )
           .setLabel(paymentMethod.name)
           .setStyle(ButtonStyle.Primary);

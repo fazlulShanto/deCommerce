@@ -10,7 +10,7 @@ import {
 import { PaymentMethodDAL } from '../../db/payment-method.dal';
 import type { SlashCommand } from '../../config/command-handler';
 import { getGenericErrorEmbed } from '@/utils/genericEmbeds';
-import { MAX_AUTOCOMPLETE_CHOICES } from '@/utils/constants';
+import { MAX_AUTOCOMPLETE_CHOICES, BOT_COMMAND_BUTTON_IDS } from '@/utils/constants';
 import { format } from 'date-fns';
 
 const commandName = 'payment-method-details';
@@ -120,7 +120,9 @@ export const PaymentMethodDetailsCommand: SlashCommand = {
       }
 
       const copyPhoneNumberButton = new ButtonBuilder()
-        .setCustomId('copyPhoneNumber_' + paymentMethod?.phoneNumber)
+        .setCustomId(
+          [BOT_COMMAND_BUTTON_IDS.COPY_PHONE_NUMBER, paymentMethod?.phoneNumber].join('_'),
+        )
         .setLabel('Copy Phone Number')
         .setStyle(ButtonStyle.Primary);
 
