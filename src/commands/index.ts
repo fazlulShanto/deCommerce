@@ -10,6 +10,7 @@ import AddPaymentMethodCommand from './payments/addPaymentMethod';
 import { DeletePaymentMethodCommand } from './payments/deletePaymentMethod';
 import ListPaymentMethodsCommand from './payments/listPaymentMethod';
 import PaymentMethodDetailsCommand from './payments/paymentMethodDetails';
+import ListOrdersCommand from './order/listOrders';
 
 export const botCommands = [
   PingCommand,
@@ -24,4 +25,5 @@ export const botCommands = [
   DeletePaymentMethodCommand,
   ListPaymentMethodsCommand,
   PaymentMethodDetailsCommand,
+  ListOrdersCommand,
 ];

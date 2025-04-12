@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { PaymentMethodDAL } from '@/db/payment-method.dal';
 import { ProductDAL } from '@/db/product.dal';
 import { BOT_COMMAND_BUTTON_IDS } from '@/utils/constants';
@@ -14,11 +13,11 @@ export const handleButtonInteractions = async (interaction: ButtonInteraction) =
 };
 
 export const handlePaymentMethodButton = async (interaction: ButtonInteraction) => {
-  const [_, productId, paymentMethodId, commandUserId] = interaction.customId.split('_');
+  const [_, productId, paymentMethodId, commandUserId, _orderId] = interaction.customId.split('_');
 
   if (commandUserId !== interaction.user.id) {
     await interaction.reply({
-      content: '❌ You are not allowed.',
+      content: '❌ You are not allowed to use this command.',
       flags: [MessageFlags.Ephemeral],
     });
     return;
@@ -47,12 +46,12 @@ export const handlePaymentMethodButton = async (interaction: ButtonInteraction) 
     .setTitle(` ${paymentMethod.name} payment details`)
     .addFields([
       {
-        name: 'Phone Number',
-        value: paymentMethod.phoneNumber,
+        name: 'Product Name',
+        value: product.name,
       },
       {
-        name: 'Product',
-        value: '```\n' + product.name + '\n```',
+        name: 'Account Number',
+        value: '```\n' + paymentMethod.phoneNumber + '\n```',
       },
       {
         name: 'Price',
@@ -60,6 +59,9 @@ export const handlePaymentMethodButton = async (interaction: ButtonInteraction) 
       },
     ])
     .setTimestamp()
+    .setFooter({
+      text: 'Order ID:' + _orderId,
+    })
     .setColor('Blue');
 
   if (paymentMethod.qrCodeImage) {

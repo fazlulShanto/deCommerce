@@ -1,0 +1,99 @@
+import mongoose from 'mongoose';
+import { nanoid } from 'nanoid';
+const orderSchema = new mongoose.Schema(
+  {
+    _id: { type: String, required: true, default: () => nanoid(10) },
+    productName: { type: String, required: true },
+    price: { type: Number, required: true },
+    paymentMethod: { type: String, required: false },
+    confirmationStatus: {
+      type: String,
+      enum: ['pending', 'confirmed', 'cancelled'],
+      default: 'pending',
+    },
+    deliveryStatus: {
+      type: String,
+      enum: ['pending', 'processing', 'delivered', 'cancelled'],
+      default: 'pending',
+    },
+    paymentAmount: { type: Number, required: true },
+    paymentStatus: {
+      type: String,
+      enum: ['pending', 'completed', 'failed', 'refunded'],
+      default: 'pending',
+    },
+    guildId: { type: String, required: true },
+    customerId: { type: String, required: true }, // Discord user ID
+  },
+  {
+    timestamps: true,
+  },
+);
+
+const OrderModel = mongoose.model<OrderDocument>('orders', orderSchema);
+
+// Interface for the document with Mongoose methods
+interface OrderDocument extends mongoose.Document {
+  _id: mongoose.Types.ObjectId;
+  productName: string;
+  price: number;
+  paymentMethod: string;
+  confirmationStatus: 'pending' | 'confirmed' | 'cancelled';
+  deliveryStatus: 'pending' | 'processing' | 'delivered' | 'cancelled';
+  paymentAmount: number;
+  paymentStatus: 'pending' | 'completed' | 'failed' | 'refunded';
+  guildId: string;
+  customerId: string; // Discord user ID
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Interface for the data without Mongoose methods
+type OrderData = Omit<OrderDocument, keyof mongoose.Document | 'createdAt' | 'updatedAt'>;
+
+const OrderDAL = {
+  createOrder: async (order: OrderData): Promise<OrderDocument> => {
+    return OrderModel.create(order);
+  },
+
+  updateOrder: async (id: string, updates: Partial<OrderData>): Promise<OrderDocument | null> => {
+    return OrderModel.findByIdAndUpdate(id, updates, { new: true });
+  },
+
+  getOrderById: async (id: string): Promise<OrderDocument | null> => {
+    return OrderModel.findById(id);
+  },
+
+  getOrdersByGuildId: async (guildId: string): Promise<OrderDocument[]> => {
+    return OrderModel.find({ guildId });
+  },
+
+  getOrdersByCustomerId: async (customerId: string): Promise<OrderDocument[]> => {
+    return OrderModel.find({ customerId });
+  },
+
+  getOrdersByPaymentMethod: async (paymentMethod: string): Promise<OrderDocument[]> => {
+    return OrderModel.find({ paymentMethod });
+  },
+
+  getOrdersByStatus: async (
+    status: {
+      confirmationStatus?: OrderDocument['confirmationStatus'];
+      deliveryStatus?: OrderDocument['deliveryStatus'];
+      paymentStatus?: OrderDocument['paymentStatus'];
+    },
+    guildId: string,
+  ): Promise<OrderDocument[]> => {
+    return OrderModel.find({ ...status, guildId });
+  },
+
+  deleteOrder: async (id: string): Promise<OrderDocument | null> => {
+    return OrderModel.findByIdAndDelete(id);
+  },
+
+  deleteOrdersByGuildId: async (guildId: string) => {
+    return OrderModel.deleteMany({ guildId });
+  },
+};
+
+export { OrderDAL, OrderModel, type OrderDocument, type OrderData };

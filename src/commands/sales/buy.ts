@@ -12,6 +12,7 @@ import { ProductDAL } from '@/db/product.dal';
 import { getGenericErrorEmbed, getGenericSuccessEmbed } from '@/utils/genericEmbeds';
 import { BOT_COMMAND_BUTTON_IDS, MAX_AUTOCOMPLETE_CHOICES } from '@/utils/constants';
 import { PaymentMethodDAL } from '@/db/payment-method.dal';
+import { OrderDAL } from '@/db/order.dal';
 
 const commandName = 'buy';
 
@@ -96,6 +97,23 @@ export const BuyCommand: SlashCommand = {
         return;
       }
 
+      // create order in db
+      const order = await OrderDAL.createOrder({
+        productName: product.name,
+        price: product.price,
+        paymentMethod: '',
+        customerId: interaction.user.id,
+        guildId: guildId,
+        confirmationStatus: 'pending',
+        deliveryStatus: 'pending',
+        paymentAmount: product.price,
+        paymentStatus: 'pending',
+      });
+
+      if (!order) {
+        throw new Error('Failed to create order!');
+      }
+      // send embed to user
       const embed = new EmbedBuilder()
         .setTitle('Select Payment Method')
         .setDescription(
@@ -104,11 +122,15 @@ export const BuyCommand: SlashCommand = {
         .addFields([
           {
             name: 'Product Name',
-            value: '```' + product.name + '```',
+            value: product.name,
           },
           {
             name: 'Product Price',
             value: '```elm\n' + product.price.toString() + '\n```',
+          },
+          {
+            name: 'Order ID:',
+            value: '```' + order._id.toString() + '```',
           },
         ])
         .setTimestamp()
@@ -122,6 +144,7 @@ export const BuyCommand: SlashCommand = {
               product._id.toString(),
               paymentMethod._id.toString(),
               interaction.user.id,
+              order._id.toString(),
             ].join('_'),
           )
           .setLabel(paymentMethod.name)
