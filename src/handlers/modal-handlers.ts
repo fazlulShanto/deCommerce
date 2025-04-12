@@ -116,7 +116,10 @@ export const handleAddOrUpdateProductModal = async (
 export const handleAddPaymentMethodModal = async (interaction: ModalSubmitInteraction) => {
   const name = interaction.fields.getTextInputValue('name');
   const emoji = interaction.fields.getTextInputValue('emoji');
+  const qrCodeImage = interaction.fields.getTextInputValue('qrCodeImage');
+  const phoneNumber = interaction.fields.getTextInputValue('phoneNumber');
   const guildId = interaction.guildId;
+
   if (!guildId) {
     throw new Error('Guild ID is required');
   }
@@ -125,10 +128,13 @@ export const handleAddPaymentMethodModal = async (interaction: ModalSubmitIntera
     const paymentMethodData: PaymentMethodData = {
       name,
       emoji,
+      phoneNumber,
       guildId,
+      qrCodeImage,
     };
 
     const paymentMethod = await PaymentMethodDAL.createPaymentMethod(paymentMethodData);
+
     if (!paymentMethod) {
       throw new Error('Failed to add payment method');
     }

@@ -4,7 +4,7 @@ import {
   handleAddOrUpdateProductModal,
   handleAddPaymentMethodModal,
 } from '@/handlers/modal-handlers';
-import { handlePaymentMethodButton } from '@/handlers/btn-interaction-handlers';
+import { handleButtonInteractions } from '@/handlers/btn-interaction-handlers';
 
 const handleInteractionCreate = async (interaction: Interaction) => {
   if (interaction.isChatInputCommand()) {
@@ -95,7 +95,7 @@ const handleInteractionCreate = async (interaction: Interaction) => {
     }
   }
   if (interaction.isButton()) {
-    await handlePaymentMethodButton(interaction);
+    await handleButtonInteractions(interaction);
   }
 };
 

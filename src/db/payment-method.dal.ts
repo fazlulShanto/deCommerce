@@ -6,6 +6,7 @@ const paymentMethodSchema = new mongoose.Schema(
     name: String,
     emoji: { type: String, default: '' },
     qrCodeImage: { type: String, default: '' },
+    phoneNumber: { type: String, default: '' },
     guildId: String,
   },
   {
@@ -31,16 +32,17 @@ interface PaymentMethodDocument extends mongoose.Document {
   name: string;
   emoji: string;
   guildId: string;
+  qrCodeImage: string;
+  phoneNumber: string;
   createdAt: Date;
   updatedAt: Date;
 }
 
 // Interface for the data without Mongoose methods
-interface PaymentMethodData {
-  name: string;
-  emoji: string;
-  guildId: string;
-}
+type PaymentMethodData = Omit<
+  PaymentMethodDocument,
+  keyof mongoose.Document | 'createdAt' | 'updatedAt'
+>;
 
 const PaymentMethodDAL = {
   createPaymentMethod: async (paymentMethod: PaymentMethodData): Promise<PaymentMethodDocument> => {

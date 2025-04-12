@@ -38,12 +38,32 @@ export const AddPaymentMethodCommand: SlashCommand = {
       .setPlaceholder('Enter an emoji (e.g., :credit_card:)')
       .setRequired(false);
 
+    const qrCodeImageInput = new TextInputBuilder()
+      .setCustomId('qrCodeImage')
+      .setLabel('QR Code Image Link')
+      .setStyle(TextInputStyle.Short)
+      .setPlaceholder('Enter the QR code image URL')
+      .setRequired(false);
+
+    const phoneNumberInput = new TextInputBuilder()
+      .setCustomId('phoneNumber')
+      .setLabel('Phone Number')
+      .setStyle(TextInputStyle.Short)
+      .setPlaceholder('Enter the phone number')
+      .setRequired(true);
+
     const nameRow = new ActionRowBuilder<ModalActionRowComponentBuilder>().addComponents(nameInput);
     const emojiRow = new ActionRowBuilder<ModalActionRowComponentBuilder>().addComponents(
       emojiInput,
     );
+    const qrCodeImageRow = new ActionRowBuilder<ModalActionRowComponentBuilder>().addComponents(
+      qrCodeImageInput,
+    );
+    const phoneNumberRow = new ActionRowBuilder<ModalActionRowComponentBuilder>().addComponents(
+      phoneNumberInput,
+    );
 
-    modal.addComponents(nameRow, emojiRow);
+    modal.addComponents(nameRow, qrCodeImageRow, phoneNumberRow, emojiRow);
 
     await interaction.showModal(modal);
   },

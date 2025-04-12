@@ -32,16 +32,22 @@ export const ListPaymentMethodsCommand: SlashCommand = {
         .setTimestamp()
         .addFields(
           availablePaymentMethods.map((paymentMethod, index) => ({
-            name: `Payment Method ${index + 1}`,
+            name: `Payment Method ${index + 1}:  ` + '```' + paymentMethod.name + '```',
             value:
-              '```' + `Name: ${paymentMethod.name}\nID: ${paymentMethod._id.toString()}` + '```',
+              '\n**Phone Number:** ' +
+              '```json\n' +
+              paymentMethod.phoneNumber +
+              '```' +
+              '\n**QR Code Link:** ' +
+              `\u200b [Click here](${paymentMethod?.qrCodeImage || 'None'})` +
+              '\n' +
+              '-'.repeat(30),
           })),
         )
         .setColor('Green');
 
       await interaction.reply({ content: 'list of message', embeds: [paymentMethodListEmbed] });
-    } catch (error) {
-      console.log(error);
+    } catch {
       await interaction.reply({
         embeds: [
           getGenericErrorEmbed(

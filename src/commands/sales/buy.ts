@@ -53,10 +53,17 @@ export const BuyCommand: SlashCommand = {
   execute: async (interaction: ChatInputCommandInteraction) => {
     try {
       await interaction.deferReply();
-      const paymentMethods = await PaymentMethodDAL.getPaymentMethodsByGuildId(interaction.guildId + '');
+      const paymentMethods = await PaymentMethodDAL.getPaymentMethodsByGuildId(
+        interaction.guildId + '',
+      );
       if (!paymentMethods || !Array.isArray(paymentMethods) || paymentMethods.length === 0) {
         await interaction.followUp({
-          embeds: [getGenericSuccessEmbed('Payment Method', 'Please contact the server owner to  about the payment method.')],
+          embeds: [
+            getGenericSuccessEmbed(
+              'Payment Method',
+              'Please contact the server owner to  about the payment method.',
+            ),
+          ],
         });
         return;
       }
@@ -73,6 +80,7 @@ export const BuyCommand: SlashCommand = {
         throw new Error('Guild ID not found!');
       }
       const product = await ProductDAL.getProductById(productId);
+
       if (!product) {
         await interaction.followUp({
           embeds: [
@@ -90,18 +98,34 @@ export const BuyCommand: SlashCommand = {
 
       const embed = new EmbedBuilder()
         .setTitle('Select Payment Method')
-        .setDescription('Please select the payment method you would like to use.')
+        .setDescription(
+          'Please select the payment method you would like to use to buy the product.',
+        )
+        .addFields([
+          {
+            name: 'Product Name',
+            value: '```' + product.name + '```',
+          },
+          {
+            name: 'Product Price',
+            value: '```elm\n' + product.price.toString() + '\n```',
+          },
+        ])
+        .setTimestamp()
         .setColor('Blue');
 
-        const paymentMethodsButtons  = paymentMethods.map((paymentMethod) => {
-          return new ButtonBuilder()
-            .setCustomId(['payment_method',paymentMethod.name , paymentMethod._id.toString()].join('_'))
-            .setLabel(paymentMethod.name)
-            .setStyle(ButtonStyle.Primary);
-        });
+      const paymentMethodsButtons = paymentMethods.map((paymentMethod) => {
+        return new ButtonBuilder()
+          .setCustomId(
+            ['payment_method', paymentMethod.name, paymentMethod._id.toString()].join('_'),
+          )
+          .setLabel(paymentMethod.name)
+          .setStyle(ButtonStyle.Primary);
+      });
 
-
-      const paymentMethodsButtonRow = new ActionRowBuilder<ButtonBuilder>().addComponents( ...paymentMethodsButtons);
+      const paymentMethodsButtonRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+        ...paymentMethodsButtons,
+      );
 
       await interaction.followUp({
         embeds: [embed],
