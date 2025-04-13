@@ -3,9 +3,11 @@ import { ActionRowBuilder, StringSelectMenuBuilder, type Interaction } from 'dis
 import {
   handleAddOrUpdateProductModal,
   handleAddPaymentMethodModal,
+  handleDeliveryProductModal,
 } from '@/handlers/modal-handlers';
 import { handleButtonInteractions } from '@/handlers/btn-interaction-handlers';
-
+import { MODAL_IDS } from '@/utils/constants';
+import { getGenericErrorEmbed } from '@/utils/genericEmbeds';
 const handleInteractionCreate = async (interaction: Interaction) => {
   if (interaction.isChatInputCommand()) {
     const command = interaction.client.commands.get(interaction.commandName);
@@ -51,8 +53,13 @@ const handleInteractionCreate = async (interaction: Interaction) => {
         return;
       }
 
+      if (interaction.customId.startsWith(MODAL_IDS.DELIVERY_PRODUCT)) {
+        await handleDeliveryProductModal(interaction);
+        return;
+      }
+
       interaction.reply({
-        content: 'There was an error while submitting the modal!',
+        embeds: [getGenericErrorEmbed('Invalid modal', 'Please try again.')],
       });
     } catch (error) {
       console.error('Error handling modal submission:', error);

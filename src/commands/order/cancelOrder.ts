@@ -2,20 +2,18 @@ import { EmbedBuilder, SlashCommandBuilder, type ChatInputCommandInteraction } f
 import { OrderDAL } from '../../db/order.dal';
 import type { SlashCommand } from '../../config/command-handler';
 import { getGenericErrorEmbed } from '@/utils/genericEmbeds';
+import { format } from 'date-fns';
 
-const commandName = 'order-details';
+const commandName = 'cancel-order';
 
-export const OrderDetailsCommand: SlashCommand = {
+export const CancelOrderCommand: SlashCommand = {
   name: commandName,
-  description: 'Get details of an order',
+  description: 'Cancel an order',
   data: new SlashCommandBuilder()
     .setName(commandName)
-    .setDescription('Get details of an order')
+    .setDescription('Cancel an order')
     .addStringOption((option) =>
-      option
-        .setName('order-id')
-        .setDescription('The ID of the order to get details of')
-        .setRequired(true),
+      option.setName('order-id').setDescription('The ID of the order to cancel').setRequired(true),
     ) as SlashCommandBuilder,
 
   requiredPermissions: [],
@@ -38,7 +36,11 @@ export const OrderDetailsCommand: SlashCommand = {
         return;
       }
 
-      const order = await OrderDAL.getOrderById(orderId);
+      const order = await OrderDAL.updateOrder(orderId, {
+        confirmationStatus: 'cancelled',
+        deliveryStatus: 'cancelled',
+        paymentStatus: 'failed',
+      });
 
       if (!order) {
         await interaction.reply({
@@ -52,11 +54,9 @@ export const OrderDetailsCommand: SlashCommand = {
         return;
       }
 
-      const deliveryInfo = order?.deliveryInfo ? '```' + order.deliveryInfo + '```' : '\u200b';
-
       const embed = new EmbedBuilder()
-        .setTitle('Order Details')
-        .setDescription(deliveryInfo)
+        .setTitle('Order Cancelled')
+        .setDescription(`Order from <@${order.customerId}> has been cancelled.`)
         .addFields([
           {
             name: 'Order ID',
@@ -68,30 +68,18 @@ export const OrderDetailsCommand: SlashCommand = {
           },
           {
             name: 'Price',
-            value: '```json\n' + order.price.toString() + '```',
+            value: `${order.price.toFixed(2)}`,
           },
           {
             name: 'Payment Method',
-            value: order.paymentMethod,
+            value: order.paymentMethod || 'N/A',
           },
           {
-            name: 'Confirmation Status',
-            value: order.confirmationStatus,
-          },
-          {
-            name: 'Delivery Status',
-            value: order.deliveryStatus,
-          },
-          {
-            name: 'Payment Status',
-            value: '```elm\n' + order.paymentStatus + '\n```',
-          },
-          {
-            name: 'Customer ID',
-            value: order.customerId,
+            name: 'Ordered At',
+            value: format(order.createdAt, 'MMM d, yyyy h:mm a'),
           },
         ])
-        .setColor('Green');
+        .setColor('Red');
 
       await interaction.reply({
         embeds: [embed],

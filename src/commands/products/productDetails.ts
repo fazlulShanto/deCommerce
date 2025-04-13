@@ -69,10 +69,6 @@ export const ProductDetailsCommand: SlashCommand = {
         .setTitle('Product Details')
         .addFields(
           {
-            name: 'Product ID',
-            value: product._id.toString(),
-          },
-          {
             name: 'Product Name',
             value: product.name,
           },

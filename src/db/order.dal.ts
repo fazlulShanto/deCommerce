@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { nanoid } from 'nanoid';
+import { z } from 'zod';
 const orderSchema = new mongoose.Schema(
   {
     _id: { type: String, required: true, default: () => nanoid(10) },
@@ -24,6 +25,7 @@ const orderSchema = new mongoose.Schema(
     },
     guildId: { type: String, required: true },
     customerId: { type: String, required: true }, // Discord user ID
+    deliveryInfo: { type: String, required: false, default: '' },
   },
   {
     timestamps: true,
@@ -45,6 +47,7 @@ interface OrderDocument extends mongoose.Document {
   guildId: string;
   customerId: string; // Discord user ID
   createdAt: Date;
+  deliveryInfo?: string;
   updatedAt: Date;
 }
 
@@ -96,4 +99,29 @@ const OrderDAL = {
   },
 };
 
-export { OrderDAL, OrderModel, type OrderDocument, type OrderData };
+// Zod schema for order
+const confirmationStatusSchema = z.enum(['pending', 'confirmed', 'cancelled']).default('pending');
+const deliveryStatusSchema = z
+  .enum(['pending', 'processing', 'delivered', 'cancelled'])
+  .default('pending');
+const paymentStatusSchema = z
+  .enum(['pending', 'completed', 'failed', 'refunded'])
+  .default('pending');
+
+const OrderZodSchema = z.object({
+  _id: z.string().min(1),
+  productName: z.string().min(1),
+  price: z.number().positive(),
+  paymentMethod: z.string().optional(),
+  confirmationStatus: confirmationStatusSchema,
+  deliveryStatus: deliveryStatusSchema,
+  paymentAmount: z.number().positive(),
+  paymentStatus: paymentStatusSchema,
+  guildId: z.string().min(1),
+  customerId: z.string().min(1),
+  deliveryInfo: z.string().optional(),
+  createdAt: z.date().optional(),
+  updatedAt: z.date().optional(),
+});
+
+export { OrderDAL, OrderModel, type OrderDocument, type OrderData, OrderZodSchema };

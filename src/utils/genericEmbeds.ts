@@ -1,12 +1,25 @@
 import type { TextChannel } from 'discord.js';
-import { ChatInputCommandInteraction, EmbedBuilder, type BaseInteraction } from 'discord.js';
+import {
+  ChatInputCommandInteraction,
+  EmbedBuilder,
+  type BaseInteraction,
+  type APIEmbedField,
+} from 'discord.js';
 
-const getGenericErrorEmbed = (title: string, description: string) => {
-  return new EmbedBuilder().setTitle(title).setDescription(description).setColor('Red');
+const getGenericErrorEmbed = (title: string, description: string, fields?: APIEmbedField[]) => {
+  return new EmbedBuilder()
+    .setTitle(title)
+    .setDescription(description)
+    .setColor('Red')
+    .addFields(fields || []);
 };
 
-const getGenericSuccessEmbed = (title: string, description: string) => {
-  return new EmbedBuilder().setTitle(title).setDescription(description).setColor('Green');
+const getGenericSuccessEmbed = (title: string, description: string, fields?: APIEmbedField[]) => {
+  return new EmbedBuilder()
+    .setTitle(title)
+    .setDescription(description)
+    .setColor('Green')
+    .addFields(fields || []);
 };
 
 const sendEmbed = async ({

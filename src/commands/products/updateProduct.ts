@@ -98,13 +98,13 @@ export const UpdateProductCommand: SlashCommand = {
       .setPlaceholder('Enter price (e.g., 99.99)')
       .setRequired(true);
 
-    const emojiInput = new TextInputBuilder()
-      .setCustomId('emoji')
-      .setLabel('Product Emoji')
-      .setStyle(TextInputStyle.Short)
-      .setValue(product?.emoji ? product.emoji + '' : '')
-      .setPlaceholder('Enter an emoji (e.g., 🎮)')
-      .setRequired(false);
+    // const emojiInput = new TextInputBuilder()
+    //   .setCustomId('emoji')
+    //   .setLabel('Product Emoji')
+    //   .setStyle(TextInputStyle.Short)
+    //   .setValue(product?.emoji ? product.emoji + '' : '')
+    //   .setPlaceholder('Enter an emoji (e.g., 🎮)')
+    //   .setRequired(false);
 
     const isAvailableInput = new TextInputBuilder()
       .setCustomId('isAvailable')
@@ -121,15 +121,15 @@ export const UpdateProductCommand: SlashCommand = {
     const priceRow = new ActionRowBuilder<ModalActionRowComponentBuilder>().addComponents(
       priceInput,
     );
-    const emojiRow = new ActionRowBuilder<ModalActionRowComponentBuilder>().addComponents(
-      emojiInput,
-    );
+    // const emojiRow = new ActionRowBuilder<ModalActionRowComponentBuilder>().addComponents(
+    //   emojiInput,
+    // );
 
     const isAvailableRow = new ActionRowBuilder<ModalActionRowComponentBuilder>().addComponents(
       isAvailableInput,
     );
 
-    modal.addComponents(nameRow, descriptionRow, priceRow, emojiRow, isAvailableRow);
+    modal.addComponents(nameRow, descriptionRow, priceRow, isAvailableRow);
 
     await interaction.showModal(modal);
   },

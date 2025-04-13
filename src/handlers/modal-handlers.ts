@@ -1,10 +1,11 @@
-import { MessageFlags, type ModalSubmitInteraction } from 'discord.js';
+import { MessageFlags, type ModalSubmitInteraction, EmbedBuilder } from 'discord.js';
 import type { ProductDocument } from '@/db/product.dal';
 import { ProductDAL } from '@/db/product.dal';
 import { z } from 'zod';
 import { getGenericErrorEmbed, getGenericSuccessEmbed } from '@/utils/genericEmbeds';
 import mongoose from 'mongoose';
 import { PaymentMethodDAL, type PaymentMethodData } from '@/db/payment-method.dal';
+import { OrderDAL } from '@/db/order.dal';
 
 // Define the product schema with Zod
 const productSchema = z.object({
@@ -160,4 +161,44 @@ export const handleAddPaymentMethodModal = async (interaction: ModalSubmitIntera
       ],
     });
   }
+};
+
+export const handleDeliveryProductModal = async (interaction: ModalSubmitInteraction) => {
+  console.log('handleDeliveryProductModal');
+  const modalCustomId = interaction?.customId || '';
+  const orderId = modalCustomId.split('_')[1];
+
+  const description = interaction.fields.getTextInputValue('description');
+
+  if (!orderId || !description) {
+    throw new Error('Missing required fields');
+  }
+
+  const order = await OrderDAL.getOrderById(orderId);
+
+  if (!order) {
+    throw new Error('Order not found');
+  }
+  const productName = order?.productName;
+  const productPrice = order?.price;
+
+  // update order status to delivered
+  await OrderDAL.updateOrder(orderId, {
+    deliveryStatus: 'delivered',
+    confirmationStatus: 'confirmed',
+    paymentStatus: 'completed',
+    deliveryInfo: description,
+  });
+
+  const embed = new EmbedBuilder()
+    .setTitle(`Delivery Product`)
+    .setDescription('```' + description + '```')
+    .addFields([
+      { name: 'Order ID', value: orderId },
+      { name: 'Product Name', value: productName },
+      { name: 'Product Price', value: productPrice.toString() },
+    ])
+    .setTimestamp()
+    .setColor('DarkGreen');
+  await interaction.reply({ embeds: [embed] });
 };

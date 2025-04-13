@@ -42,13 +42,6 @@ export const AddProductsCommand: SlashCommand = {
       .setPlaceholder('Enter price (e.g., 99.99)')
       .setRequired(true);
 
-    const emojiInput = new TextInputBuilder()
-      .setCustomId('emoji')
-      .setLabel('Product Emoji')
-      .setStyle(TextInputStyle.Short)
-      .setPlaceholder('Enter an emoji (e.g., :fire:)')
-      .setRequired(false);
-
     const isAvailableInput = new TextInputBuilder()
       .setCustomId('isAvailable')
       .setLabel('Is Available')
@@ -65,15 +58,12 @@ export const AddProductsCommand: SlashCommand = {
     const priceRow = new ActionRowBuilder<ModalActionRowComponentBuilder>().addComponents(
       priceInput,
     );
-    const emojiRow = new ActionRowBuilder<ModalActionRowComponentBuilder>().addComponents(
-      emojiInput,
-    );
 
     const isAvailableRow = new ActionRowBuilder<ModalActionRowComponentBuilder>().addComponents(
       isAvailableInput,
     );
 
-    modal.addComponents(nameRow, descriptionRow, priceRow, emojiRow, isAvailableRow);
+    modal.addComponents(nameRow, descriptionRow, priceRow, isAvailableRow);
 
     await interaction.showModal(modal);
   },

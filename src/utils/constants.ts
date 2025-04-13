@@ -6,3 +6,7 @@ export const BOT_COMMAND_BUTTON_IDS = {
   PAYMENT_METHOD: 'paymentMethod',
   COPY_PHONE_NUMBER: 'copyPhoneNumber',
 };
+
+export const MODAL_IDS = {
+  DELIVERY_PRODUCT: 'deliveryProductModal',
+};
