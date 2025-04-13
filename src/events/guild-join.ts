@@ -1,7 +1,6 @@
 import type { Guild } from 'discord.js';
-import { ServerDal } from '@taskcord/database';
 
-export const handleGuildCreate = async (guild: Guild) => {
+export const handleGuildCreate = (guild: Guild) => {
   try {
     console.log(`✅ Added server ${guild.name} to database`);
   } catch (error) {

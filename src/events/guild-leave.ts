@@ -1,19 +1,9 @@
-import type { Guild } from "discord.js";
-import { ServerDal } from "@taskcord/database";
+import type { Guild } from 'discord.js';
 
-export const handleGuildLeave = async (guild: Guild) => {
+export const handleGuildLeave = (guild: Guild) => {
   try {
-    await ServerDal.createServer({
-      serverId: guild.id,
-      ownerId: guild.ownerId,
-      serverLogo: guild.iconURL() || guild.icon,
-      serverName: guild.name,
-      isBotInServer: false,
-    });
+    console.log(`❌ Removed server ${guild.name} from database`);
   } catch (error) {
-    console.error(
-      `❌ Failed to update server ${guild.name} to database:`,
-      error
-    );
+    console.error(`❌ Failed to remove server ${guild.name} from database:`, error);
   }
 };
