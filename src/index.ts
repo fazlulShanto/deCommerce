@@ -18,28 +18,28 @@ declare module 'discord.js' {
   export interface Client {
     globalCacheDb: Redis;
     commands: Collection<string, SlashCommand>;
-    isBotAdmin: (interaction: Interaction) => Promise<boolean>;
+    isBotAdmin: (interaction: Interaction, shouldReply?: boolean) => Promise<boolean>;
   }
 }
 
-const isBotAdmin = async (interaction: Interaction) => {
+const isBotAdmin = async (interaction: Interaction, shouldReply = true) => {
   if (!interaction.guildId || !interaction.member) {
     return false;
   }
   const storeConfig = await getStoreConfigFromCache(interaction.guildId);
+
   const userRoleIds =
     interaction.member.roles instanceof Array
       ? interaction.member.roles
       : Array.from(interaction.member.roles.cache.keys());
   const isBotAdmin = userRoleIds.includes(storeConfig?.botAdminRoleId);
 
-  if (!isBotAdmin) {
+  if (shouldReply) {
     await (interaction as ChatInputCommandInteraction).reply({
       embeds: [getGenericErrorEmbed('Failed', "You don't have permission to use this command")],
     });
-    return false;
   }
-  return true;
+  return isBotAdmin;
 };
 
 const createAndStartBot = async () => {
