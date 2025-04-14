@@ -9,4 +9,8 @@ export const BOT_COMMAND_BUTTON_IDS = {
 
 export const MODAL_IDS = {
   DELIVERY_PRODUCT: 'deliveryProductModal',
+  UPDATE_PAYMENT_METHOD: 'updatePaymentMethodModal',
+  ADD_PAYMENT_METHOD: 'addPaymentMethodModal',
+  UPDATE_PRODUCT: 'updateProductModal',
+  ADD_PRODUCT: 'addProductModal',
 };

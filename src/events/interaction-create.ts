@@ -1,19 +1,30 @@
 /* eslint-disable @typescript-eslint/no-floating-promises -- just a try catch */
 import { ActionRowBuilder, StringSelectMenuBuilder, type Interaction } from 'discord.js';
-import {
-  handleAddOrUpdateProductModal,
-  handleAddPaymentMethodModal,
-  handleDeliveryProductModal,
-} from '@/handlers/modal-handlers';
+import { handleModalSubmit } from '@/handlers/modal-handlers';
 import { handleButtonInteractions } from '@/handlers/btn-interaction-handlers';
-import { MODAL_IDS } from '@/utils/constants';
-import { getGenericErrorEmbed } from '@/utils/genericEmbeds';
+import { getStoreConfigFromCache } from '@/utils/redis';
+
 const handleInteractionCreate = async (interaction: Interaction) => {
+  if (!interaction.guildId || !interaction.member) {
+    return;
+  }
+
   if (interaction.isChatInputCommand()) {
     const command = interaction.client.commands.get(interaction.commandName);
     if (!command) return;
+    const storeConfig = await getStoreConfigFromCache(interaction.guildId);
     try {
-      command.execute(interaction);
+      const isBotAdminRequired = command.requiredPermissions.includes('BotAdmin');
+      if (isBotAdminRequired) {
+        const isBotAdmin = await interaction.client.isBotAdmin(interaction);
+        if (!isBotAdmin) {
+          return;
+        }
+      }
+      command.execute(interaction, {
+        botAdminRoleId: storeConfig?.botAdminRoleId,
+        currency: storeConfig?.currency,
+      });
     } catch (error) {
       console.error(error);
       interaction.reply({
@@ -37,37 +48,8 @@ const handleInteractionCreate = async (interaction: Interaction) => {
   }
 
   if (interaction.isModalSubmit()) {
-    try {
-      if (interaction.customId.startsWith('updateProductModal_')) {
-        await handleAddOrUpdateProductModal(interaction, true);
-        return;
-      }
-
-      if (interaction.customId === 'addProductModal') {
-        await handleAddOrUpdateProductModal(interaction, false);
-        return;
-      }
-
-      if (interaction.customId === 'addPaymentMethodModal') {
-        await handleAddPaymentMethodModal(interaction);
-        return;
-      }
-
-      if (interaction.customId.startsWith(MODAL_IDS.DELIVERY_PRODUCT)) {
-        await handleDeliveryProductModal(interaction);
-        return;
-      }
-
-      interaction.reply({
-        embeds: [getGenericErrorEmbed('Invalid modal', 'Please try again.')],
-      });
-    } catch (error) {
-      console.error('Error handling modal submission:', error);
-      interaction.reply({
-        content: 'There was an error while processing your request.',
-        ephemeral: true,
-      });
-    }
+    await handleModalSubmit(interaction);
+    return;
   }
 
   if (interaction.isStringSelectMenu()) {

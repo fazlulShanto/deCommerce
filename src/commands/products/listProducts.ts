@@ -1,6 +1,6 @@
 import { EmbedBuilder, SlashCommandBuilder, type ChatInputCommandInteraction } from 'discord.js';
 import { ProductDAL } from '../../db/product.dal';
-import type { SlashCommand } from '../../config/command-handler';
+import type { SlashCommand, AdditionalCommandInfo } from '../../config/command-handler';
 import { getGenericErrorEmbed } from '@/utils/genericEmbeds';
 import { MAX_AUTOCOMPLETE_CHOICES } from '@/utils/constants';
 
@@ -12,9 +12,12 @@ export const ListProductsCommand: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName(commandName)
     .setDescription('List all products in the inventory'),
-  requiredPermissions: [],
+  requiredPermissions: ['GuildOnly'],
 
-  execute: async (interaction: ChatInputCommandInteraction) => {
+  execute: async (
+    interaction: ChatInputCommandInteraction,
+    additionalInfo?: AdditionalCommandInfo,
+  ) => {
     try {
       const guildId = interaction.guildId;
       if (!guildId) {
@@ -40,14 +43,11 @@ export const ListProductsCommand: SlashCommand = {
             .map((product) => ({
               name: '',
               value:
-                '```Product ID: ' +
-                product._id.toString() +
-                '\n' +
+                '```' +
                 'Product Name: ' +
                 product.name +
                 '\n' +
-                'Price: ' +
-                product.price +
+                `Price: ${product.price} ${additionalInfo?.currency}` +
                 '\n' +
                 '```',
             }))

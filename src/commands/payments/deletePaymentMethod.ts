@@ -38,7 +38,7 @@ export const DeletePaymentMethodCommand: SlashCommand = {
     await interaction.respond(filteredPaymentMethods);
   },
 
-  requiredPermissions: [],
+  requiredPermissions: ['BotAdmin', 'GuildOnly'],
 
   execute: async (interaction: ChatInputCommandInteraction) => {
     try {

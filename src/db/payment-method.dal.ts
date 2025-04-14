@@ -60,9 +60,10 @@ const PaymentMethodDAL = {
   },
 
   updatePaymentMethodById: async (
-    paymentMethod: Partial<PaymentMethodData> & { _id: mongoose.Types.ObjectId },
+    paymentMethodId: string,
+    paymentMethod: Partial<PaymentMethodData>,
   ): Promise<PaymentMethodDocument | null> => {
-    return PaymentMethodModel.findOneAndUpdate({ _id: paymentMethod._id }, paymentMethod, {
+    return PaymentMethodModel.findOneAndUpdate({ _id: paymentMethodId }, paymentMethod, {
       new: true,
     });
   },

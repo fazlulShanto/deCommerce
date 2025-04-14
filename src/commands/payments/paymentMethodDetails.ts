@@ -7,11 +7,41 @@ import {
   ButtonStyle,
   ActionRowBuilder,
 } from 'discord.js';
+import type { PaymentMethodDocument } from '../../db/payment-method.dal';
 import { PaymentMethodDAL } from '../../db/payment-method.dal';
 import type { SlashCommand } from '../../config/command-handler';
 import { getGenericErrorEmbed } from '@/utils/genericEmbeds';
 import { MAX_AUTOCOMPLETE_CHOICES, BOT_COMMAND_BUTTON_IDS } from '@/utils/constants';
 import { format } from 'date-fns';
+
+export const getPaymentMethodDetailsEmbed = (
+  paymentMethod: PaymentMethodDocument,
+  operationMode: 'added' | 'updated',
+) => {
+  const isInvalidNumber = Number.isNaN(Number(paymentMethod?.phoneNumber));
+
+  const embed = new EmbedBuilder()
+    .setTitle(`Payment Method ${operationMode}: ${paymentMethod.name}`)
+    .addFields(
+      {
+        name: 'Name',
+        value: (paymentMethod?.emoji || ' ') + paymentMethod.name,
+      },
+      {
+        name: 'Phone Number',
+        value: isInvalidNumber
+          ? 'Invalid phone number'
+          : '```' + paymentMethod?.phoneNumber + '```',
+      },
+      {
+        name: 'Added At',
+        value: format(paymentMethod.createdAt, 'do MMMM yyyy, HH:mm:ss'),
+      },
+    )
+    .setColor('Blue');
+
+  return embed;
+};
 
 const commandName = 'payment-method-details';
 
@@ -29,7 +59,7 @@ export const PaymentMethodDetailsCommand: SlashCommand = {
         .setRequired(true),
     ) as SlashCommandBuilder,
 
-  requiredPermissions: [],
+  requiredPermissions: ['GuildOnly'],
 
   autocomplete: async (interaction: AutocompleteInteraction) => {
     try {
@@ -93,27 +123,7 @@ export const PaymentMethodDetailsCommand: SlashCommand = {
         return;
       }
 
-      const isInvalidNumber = Number.isNaN(Number(paymentMethod?.phoneNumber));
-
-      const embed = new EmbedBuilder()
-        .setTitle('Payment Method Details: ' + paymentMethod.name)
-        .addFields(
-          {
-            name: 'Name',
-            value: (paymentMethod?.emoji || ' ') + paymentMethod.name,
-          },
-          {
-            name: 'Phone Number',
-            value: isInvalidNumber
-              ? 'Invalid phone number'
-              : '```' + paymentMethod?.phoneNumber + '```',
-          },
-          {
-            name: 'Added At',
-            value: format(paymentMethod.createdAt, 'do MMMM yyyy, HH:mm:ss'),
-          },
-        )
-        .setColor('Blue');
+      const embed = getPaymentMethodDetailsEmbed(paymentMethod, 'added');
 
       if (paymentMethod?.qrCodeImage?.startsWith('https://')) {
         embed.setImage(paymentMethod.qrCodeImage);

@@ -12,7 +12,7 @@ export const ListPaymentMethodsCommand: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName(commandName)
     .setDescription('List available payment methods'),
-  requiredPermissions: [],
+  requiredPermissions: ['GuildOnly'],
 
   execute: async (interaction: ChatInputCommandInteraction) => {
     try {

@@ -4,8 +4,37 @@ import { ProductDAL } from '../../db/product.dal';
 import type { SlashCommand } from '../../config/command-handler';
 import { getGenericErrorEmbed } from '@/utils/genericEmbeds';
 import { MAX_AUTOCOMPLETE_CHOICES } from '@/utils/constants';
+import type { ProductDocument } from '@/db/product.dal';
 
 const commandName = 'product-details';
+
+export const getProductDetailsEmbed = (
+  product: ProductDocument,
+  additionalInfo: { currency: string },
+) => {
+  const embed = new EmbedBuilder()
+    .setTitle('Product Details')
+    .addFields(
+      {
+        name: 'Product Name',
+        value: product.name,
+      },
+      {
+        name: 'Price',
+        value: `${product.price} ${additionalInfo?.currency}`,
+      },
+      {
+        name: 'Description',
+        value: product.description,
+      },
+      {
+        name: 'Availability',
+        value: product.isAvailable ? 'Yes' : 'No',
+      },
+    )
+    .setColor('Blue');
+  return embed;
+};
 
 export const ProductDetailsCommand: SlashCommand = {
   name: commandName,
@@ -21,7 +50,7 @@ export const ProductDetailsCommand: SlashCommand = {
         .setRequired(true),
     ) as SlashCommandBuilder,
 
-  requiredPermissions: [],
+  requiredPermissions: ['GuildOnly'],
 
   autocomplete: async (interaction: AutocompleteInteraction) => {
     const focusedValue = interaction.options.getFocused().toLowerCase();
@@ -41,7 +70,7 @@ export const ProductDetailsCommand: SlashCommand = {
     await interaction.respond(choices);
   },
 
-  execute: async (interaction: ChatInputCommandInteraction) => {
+  execute: async (interaction: ChatInputCommandInteraction, additionalInfo) => {
     try {
       await interaction.deferReply();
       const productId = interaction.options.getString('product-name');
@@ -65,27 +94,8 @@ export const ProductDetailsCommand: SlashCommand = {
         });
         return;
       }
-      const embed = new EmbedBuilder()
-        .setTitle('Product Details')
-        .addFields(
-          {
-            name: 'Product Name',
-            value: product.name,
-          },
-          {
-            name: 'Price',
-            value: product.price.toString(),
-          },
-          {
-            name: 'Description',
-            value: product.description,
-          },
-          {
-            name: 'Availability',
-            value: product.isAvailable ? 'Yes' : 'No',
-          },
-        )
-        .setColor('Blue');
+
+      const embed = getProductDetailsEmbed(product, { currency: additionalInfo?.currency || '' });
 
       await interaction.followUp({
         embeds: [embed],

@@ -16,9 +16,9 @@ export const CancelOrderCommand: SlashCommand = {
       option.setName('order-id').setDescription('The ID of the order to cancel').setRequired(true),
     ) as SlashCommandBuilder,
 
-  requiredPermissions: [],
+  requiredPermissions: ['BotAdmin', 'GuildOnly'],
 
-  execute: async (interaction: ChatInputCommandInteraction) => {
+  execute: async (interaction: ChatInputCommandInteraction, additionalInfo) => {
     try {
       const guildId = interaction.guildId;
       if (!guildId) {
@@ -68,7 +68,7 @@ export const CancelOrderCommand: SlashCommand = {
           },
           {
             name: 'Price',
-            value: `${order.price.toFixed(2)}`,
+            value: `${order.price} ${additionalInfo?.currency}`,
           },
           {
             name: 'Payment Method',

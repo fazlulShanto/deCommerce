@@ -24,9 +24,9 @@ export const ListOrdersCommand: SlashCommand = {
         )
         .setRequired(true),
     ) as SlashCommandBuilder,
-  requiredPermissions: [],
+  requiredPermissions: ['BotAdmin', 'GuildOnly'],
 
-  execute: async (interaction: ChatInputCommandInteraction) => {
+  execute: async (interaction: ChatInputCommandInteraction, additionalInfo) => {
     try {
       const guildId = interaction.guildId;
       if (!guildId) {
@@ -65,8 +65,7 @@ export const ListOrdersCommand: SlashCommand = {
                 'Product Name: ' +
                 order.productName +
                 '\n' +
-                'Price: ' +
-                order.price +
+                `Price: ${order.price} ${additionalInfo?.currency}` +
                 '\n' +
                 'Payment Method: ' +
                 order.paymentMethod +

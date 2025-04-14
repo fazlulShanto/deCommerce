@@ -2,17 +2,18 @@ import { MessageFlags, type ModalSubmitInteraction, EmbedBuilder } from 'discord
 import type { ProductDocument } from '@/db/product.dal';
 import { ProductDAL } from '@/db/product.dal';
 import { z } from 'zod';
-import { getGenericErrorEmbed, getGenericSuccessEmbed } from '@/utils/genericEmbeds';
+import { getGenericErrorEmbed } from '@/utils/genericEmbeds';
 import mongoose from 'mongoose';
 import { PaymentMethodDAL, type PaymentMethodData } from '@/db/payment-method.dal';
 import { OrderDAL } from '@/db/order.dal';
+import { MODAL_IDS } from '@/utils/constants';
+import { getPaymentMethodDetailsEmbed } from '@/commands/payments/paymentMethodDetails';
 
 // Define the product schema with Zod
 const productSchema = z.object({
   name: z.string().min(1, 'Product name is required'),
   description: z.string().min(1, 'Product description is required'),
   price: z.number().positive('Price must be a positive number'),
-  emoji: z.string().optional(),
   isAvailable: z.boolean(),
   guildId: z.string().min(1, 'Guild ID is required'),
 });
@@ -34,7 +35,6 @@ export const handleAddOrUpdateProductModal = async (
   const name = interaction.fields.getTextInputValue('name');
   const description = interaction.fields.getTextInputValue('description');
   const priceInput = interaction.fields.getTextInputValue('price');
-  const emoji = interaction.fields.getTextInputValue('emoji');
   const isAvailableInput = interaction.fields.getTextInputValue('isAvailable');
   const guildId = interaction.guildId;
   if (!guildId) {
@@ -62,7 +62,6 @@ export const handleAddOrUpdateProductModal = async (
       name,
       description,
       price,
-      emoji,
       isAvailable,
       guildId,
     });
@@ -99,13 +98,30 @@ export const handleAddOrUpdateProductModal = async (
       throw new Error(`Failed to ${operationMode} product.`);
     }
 
+    const embed = new EmbedBuilder()
+      .setTitle(`Product ${operationMode} successfully`)
+      .addFields(
+        {
+          name: 'Product Name',
+          value: product.name,
+        },
+        {
+          name: 'Price',
+          value: `${product.price}`,
+        },
+        {
+          name: 'Description',
+          value: product.description,
+        },
+        {
+          name: 'Availability',
+          value: product.isAvailable ? 'Yes' : 'No',
+        },
+      )
+      .setColor('Blue');
+
     await interaction.reply({
-      embeds: [
-        getGenericSuccessEmbed(
-          `Product ${operationMode} successfully`,
-          `Successfully ${operationMode} product: ${emoji} ${name}`,
-        ),
-      ],
+      embeds: [embed],
     });
   } catch {
     await interaction.reply({
@@ -114,7 +130,11 @@ export const handleAddOrUpdateProductModal = async (
   }
 };
 
-export const handleAddPaymentMethodModal = async (interaction: ModalSubmitInteraction) => {
+export const handleAddOrUpdatePaymentMethodModal = async (
+  interaction: ModalSubmitInteraction,
+  isUpdateOperation: boolean = false,
+) => {
+  const operationMode = isUpdateOperation ? 'updated' : 'added';
   const name = interaction.fields.getTextInputValue('name');
   const emoji = interaction.fields.getTextInputValue('emoji');
   const qrCodeImage = interaction.fields.getTextInputValue('qrCodeImage');
@@ -124,7 +144,6 @@ export const handleAddPaymentMethodModal = async (interaction: ModalSubmitIntera
   if (!guildId) {
     throw new Error('Guild ID is required');
   }
-  const operationMode = 'added';
   try {
     const paymentMethodData: PaymentMethodData = {
       name,
@@ -134,19 +153,28 @@ export const handleAddPaymentMethodModal = async (interaction: ModalSubmitIntera
       qrCodeImage,
     };
 
-    const paymentMethod = await PaymentMethodDAL.createPaymentMethod(paymentMethodData);
+    let paymentMethod = undefined;
+    if (isUpdateOperation) {
+      const paymentMethodId = interaction.customId.split('_')[1];
+      if (!paymentMethodId) {
+        throw new Error('Payment method ID not found in modal custom ID');
+      }
+      paymentMethod = await PaymentMethodDAL.updatePaymentMethodById(
+        paymentMethodId,
+        paymentMethodData,
+      );
+    } else {
+      paymentMethod = await PaymentMethodDAL.createPaymentMethod(paymentMethodData);
+    }
 
     if (!paymentMethod) {
       throw new Error('Failed to add payment method');
     }
 
+    const embed = getPaymentMethodDetailsEmbed(paymentMethod, operationMode);
+
     await interaction.reply({
-      embeds: [
-        getGenericSuccessEmbed(
-          `Payment method ${operationMode} successfully`,
-          `Successfully ${operationMode} payment method: ${emoji} ${name}`,
-        ),
-      ],
+      embeds: [embed],
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -164,7 +192,6 @@ export const handleAddPaymentMethodModal = async (interaction: ModalSubmitIntera
 };
 
 export const handleDeliveryProductModal = async (interaction: ModalSubmitInteraction) => {
-  console.log('handleDeliveryProductModal');
   const modalCustomId = interaction?.customId || '';
   const orderId = modalCustomId.split('_')[1];
 
@@ -201,4 +228,49 @@ export const handleDeliveryProductModal = async (interaction: ModalSubmitInterac
     .setTimestamp()
     .setColor('DarkGreen');
   await interaction.reply({ embeds: [embed] });
+};
+
+export const handleModalSubmit = async (interaction: ModalSubmitInteraction) => {
+  const modalCustomId = interaction?.customId || '';
+
+  if (!modalCustomId || !interaction.isModalSubmit()) {
+    return;
+  }
+
+  try {
+    if (interaction.customId.startsWith(MODAL_IDS.UPDATE_PRODUCT)) {
+      await handleAddOrUpdateProductModal(interaction, true);
+      return;
+    }
+
+    if (interaction.customId === MODAL_IDS.ADD_PRODUCT) {
+      await handleAddOrUpdateProductModal(interaction, false);
+      return;
+    }
+
+    if (
+      interaction.customId === MODAL_IDS.ADD_PAYMENT_METHOD ||
+      interaction.customId.startsWith(MODAL_IDS.UPDATE_PAYMENT_METHOD)
+    ) {
+      await handleAddOrUpdatePaymentMethodModal(
+        interaction,
+        modalCustomId !== MODAL_IDS.ADD_PAYMENT_METHOD,
+      );
+      return;
+    }
+
+    if (interaction.customId.startsWith(MODAL_IDS.DELIVERY_PRODUCT)) {
+      await handleDeliveryProductModal(interaction);
+      return;
+    }
+
+    await interaction.reply({
+      embeds: [getGenericErrorEmbed('Invalid modal', 'Please try again.')],
+    });
+  } catch {
+    await interaction.reply({
+      content: 'There was an error while processing your request.',
+      ephemeral: true,
+    });
+  }
 };

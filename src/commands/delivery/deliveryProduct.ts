@@ -27,7 +27,7 @@ export const DeliveryProductCommand: SlashCommand = {
         .setRequired(true),
     ) as SlashCommandBuilder,
 
-  requiredPermissions: [],
+  requiredPermissions: ['BotAdmin', 'GuildOnly'],
 
   execute: async (interaction: ChatInputCommandInteraction) => {
     try {

@@ -9,6 +9,7 @@ import {
 } from 'discord.js';
 
 import type { SlashCommand } from '../../config/command-handler';
+import { MODAL_IDS } from '@/utils/constants';
 
 const commandName = 'add-payment-method';
 
@@ -18,11 +19,11 @@ export const AddPaymentMethodCommand: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName(commandName)
     .setDescription('Add a payment method to the store'),
-  requiredPermissions: [],
+  requiredPermissions: ['BotAdmin', 'GuildOnly'],
 
   execute: async (interaction: ChatInputCommandInteraction) => {
     const modal = new ModalBuilder()
-      .setCustomId('addPaymentMethodModal')
+      .setCustomId(MODAL_IDS.ADD_PAYMENT_METHOD)
       .setTitle('Add New Payment Method');
 
     const nameInput = new TextInputBuilder()

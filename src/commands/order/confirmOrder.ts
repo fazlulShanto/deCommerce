@@ -29,7 +29,7 @@ export const ConfirmOrderCommand: SlashCommand = {
         .setAutocomplete(true),
     ) as SlashCommandBuilder,
 
-  requiredPermissions: [],
+  requiredPermissions: ['BotAdmin', 'GuildOnly'],
 
   autocomplete: async (interaction: AutocompleteInteraction) => {
     try {

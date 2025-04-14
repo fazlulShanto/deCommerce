@@ -1,9 +1,9 @@
+import customNanoid from '@/utils/customNanoId';
 import mongoose from 'mongoose';
-import { nanoid } from 'nanoid';
 import { z } from 'zod';
 const orderSchema = new mongoose.Schema(
   {
-    _id: { type: String, required: true, default: () => nanoid(10) },
+    _id: { type: String, required: true, default: () => customNanoid() },
     productName: { type: String, required: true },
     price: { type: Number, required: true },
     paymentMethod: { type: String, required: false },

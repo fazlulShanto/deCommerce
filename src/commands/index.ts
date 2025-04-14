@@ -15,6 +15,10 @@ import { OrderDetailsCommand } from './order/orderDetails';
 import { CancelOrderCommand } from './order/cancelOrder';
 import { ConfirmOrderCommand } from './order/confirmOrder';
 import { DeliveryProductCommand } from './delivery/deliveryProduct';
+import SetStoreCommand from './setup/setStore';
+import HealthCheckCommand from './utility/healthCheck';
+import ViewStoreConfigCommand from './setup/viewStoreConfig';
+import UpdatePaymentMethodCommand from './payments/updatePaymentMethod';
 
 export const botCommands = [
   PingCommand,
@@ -34,4 +38,8 @@ export const botCommands = [
   CancelOrderCommand,
   ConfirmOrderCommand,
   DeliveryProductCommand,
+  SetStoreCommand,
+  HealthCheckCommand,
+  UpdatePaymentMethodCommand,
+  ViewStoreConfigCommand,
 ];

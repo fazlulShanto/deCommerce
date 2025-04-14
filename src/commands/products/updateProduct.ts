@@ -44,7 +44,7 @@ export const UpdateProductCommand: SlashCommand = {
 
     await interaction.respond(choices);
   },
-  requiredPermissions: [],
+  requiredPermissions: ['BotAdmin', 'GuildOnly'],
 
   execute: async (interaction: ChatInputCommandInteraction) => {
     const selectedProductId = interaction.options.getString('product-name');

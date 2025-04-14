@@ -11,14 +11,26 @@ export const CommandPermissions = {
   ManageGuild: 'ManageGuild',
   ManageRoles: 'ManageRoles',
   ManageChannels: 'ManageChannels',
+  CommandUser: 'CommandUser',
+  BotAdmin: 'BotAdmin',
+  GuildOnly: 'GuildOnly',
+  DMOnly: 'DMOnly',
 } as const;
+
+export type AdditionalCommandInfo = {
+  botAdminRoleId?: string;
+  currency?: string;
+};
 
 export interface SlashCommand {
   name: string;
   description: string;
   data: SlashCommandBuilder;
   requiredPermissions: (typeof CommandPermissions)[keyof typeof CommandPermissions][];
-  execute: (interaction: ChatInputCommandInteraction) => Promise<void>;
+  execute: (
+    interaction: ChatInputCommandInteraction,
+    additionalInfo?: AdditionalCommandInfo,
+  ) => Promise<void>;
   autocomplete?: (interaction: AutocompleteInteraction) => Promise<void>;
 }
 

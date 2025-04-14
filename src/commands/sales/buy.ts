@@ -30,7 +30,7 @@ export const BuyCommand: SlashCommand = {
         .setRequired(true),
     ) as SlashCommandBuilder,
 
-  requiredPermissions: [],
+  requiredPermissions: ['GuildOnly'],
 
   autocomplete: async (interaction: AutocompleteInteraction) => {
     const focusedValue = interaction.options.getFocused().toLowerCase();
@@ -51,7 +51,7 @@ export const BuyCommand: SlashCommand = {
     await interaction.respond(choices);
   },
 
-  execute: async (interaction: ChatInputCommandInteraction) => {
+  execute: async (interaction: ChatInputCommandInteraction, additionalInfo) => {
     try {
       await interaction.deferReply();
       const paymentMethods = await PaymentMethodDAL.getPaymentMethodsByGuildId(
@@ -126,7 +126,7 @@ export const BuyCommand: SlashCommand = {
           },
           {
             name: 'Product Price',
-            value: '```elm\n' + product.price.toString() + '\n```',
+            value: '```elm\n' + product.price.toString() + ' ' + additionalInfo?.currency + '\n```',
           },
           {
             name: 'Order ID:',
