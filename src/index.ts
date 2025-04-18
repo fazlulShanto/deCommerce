@@ -39,6 +39,9 @@ const isBotAdmin = async (interaction: Interaction, shouldReply = true) => {
       ? interaction.member.roles
       : Array.from(interaction.member.roles.cache.keys());
   const isBotAdmin = userRoleIds.includes(storeConfig?.botAdminRoleId);
+  if (isBotAdmin) {
+    return true;
+  }
 
   if (shouldReply) {
     await (interaction as ChatInputCommandInteraction).reply({
@@ -103,8 +106,10 @@ const createAndStartBot = async () => {
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
   client.on(Events.InteractionCreate, handleInteractionCreate);
 
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
   client.on(Events.GuildCreate, handleGuildCreate);
 
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
   client.on(Events.GuildDelete, handleGuildLeave);
 
   client.login(BOT_TOKEN);
