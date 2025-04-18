@@ -1,9 +1,14 @@
+import { logger } from '@/utils/logger';
 import type { Guild } from 'discord.js';
 
-export const handleGuildLeave = (guild: Guild) => {
+export const handleGuildLeave = async (guild: Guild) => {
   try {
-    console.log(`❌ Removed server ${guild.name} from database`);
+    await logger.info(`❌ Removed server ${guild.name} from database`, {
+      context: { guildId: guild.id, guildName: guild.name },
+    });
   } catch (error) {
-    console.error(`❌ Failed to remove server ${guild.name} from database:`, error);
+    await logger.error(`❌ Failed to remove server ${guild.name} from database:`, error as Error, {
+      context: { guildId: guild.id, guildName: guild.name },
+    });
   }
 };

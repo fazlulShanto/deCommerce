@@ -12,6 +12,8 @@ import type { Redis } from 'ioredis';
 import { getGenericErrorEmbed, upgradeToPremiumEmbed } from './utils/genericEmbeds';
 import cronJobs from './utils/cronJobs';
 import { updatePremiumStatusCache, hasAccessWithCache } from './services/premium.service';
+import { handleGuildCreate } from './events/guild-join';
+import { handleGuildLeave } from './events/guild-leave';
 
 dotenv.config();
 
@@ -22,6 +24,7 @@ declare module 'discord.js' {
     commands: Collection<string, SlashCommand>;
     isBotAdmin: (interaction: Interaction, shouldReply?: boolean) => Promise<boolean>;
     isPremiumOrTrial: (interaction: Interaction) => Promise<boolean>;
+    isBotDevAdmin: (interaction: Interaction) => boolean;
   }
 }
 
@@ -45,6 +48,11 @@ const isBotAdmin = async (interaction: Interaction, shouldReply = true) => {
   return isBotAdmin;
 };
 
+const isBotDevAdmin = (interaction: Interaction) => {
+  const BOT_DEV_ADMIN_IDS = process.env.BOT_DEV_ADMIN_IDS?.split(',') ?? [];
+  return BOT_DEV_ADMIN_IDS.includes(interaction.user.id);
+};
+
 const isPremiumOrTrial = async (interaction: Interaction, shouldReply = true) => {
   if (!interaction.guildId || !interaction.member) {
     return false;
@@ -62,12 +70,17 @@ const createAndStartBot = async () => {
   console.clear();
 
   const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
+
   if (!BOT_TOKEN) {
     throw new Error('DISCORD_BOT_TOKEN is not set');
   }
 
   // Connect to MongoDB first
   await connectToDatabase();
+  // Update premium status cache
+  updatePremiumStatusCache();
+  // Update premium status cache every 1 hour
+  cronJobs.updatePremiumStatusCache();
 
   const client = new Client({
     intents: [GatewayIntentBits.Guilds],
@@ -79,6 +92,7 @@ const createAndStartBot = async () => {
   client.isBotAdmin = isBotAdmin;
   client.isPremiumOrTrial = isPremiumOrTrial;
   client.commands = getCommandCollection();
+  client.isBotDevAdmin = isBotDevAdmin;
   // await checkConnection();
   await registerCommands();
 
@@ -89,10 +103,11 @@ const createAndStartBot = async () => {
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
   client.on(Events.InteractionCreate, handleInteractionCreate);
 
+  client.on(Events.GuildCreate, handleGuildCreate);
+
+  client.on(Events.GuildDelete, handleGuildLeave);
+
   client.login(BOT_TOKEN);
 };
-updatePremiumStatusCache();
-
-cronJobs.updatePremiumStatusCache();
 
 createAndStartBot();

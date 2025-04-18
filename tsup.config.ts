@@ -5,6 +5,7 @@ export default defineConfig((options: Options) => ({
   outDir: 'dist',
   silent: true,
   clean: true,
+  sourcemap: true,
   format: ['cjs', 'esm', 'iife'],
   noExternal: ['@taskcord/database', '@taskcord/redis'],
   ...options,

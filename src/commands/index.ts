@@ -21,6 +21,9 @@ import ViewStoreConfigCommand from './setup/viewStoreConfig';
 import UpdatePaymentMethodCommand from './payments/updatePaymentMethod';
 import SalesStatsCommand from './utility/salesStats';
 import PremiumCommand from './utility/premium';
+import ExtendTrialCommand from './admin/extend-trial';
+import RevokeSubscriptionCommand from './admin/revoke-subscription';
+
 export const botCommands = [
   PingCommand,
   ServerInfoCommand,
@@ -45,4 +48,6 @@ export const botCommands = [
   ViewStoreConfigCommand,
   SalesStatsCommand,
   PremiumCommand,
+  ExtendTrialCommand,
+  RevokeSubscriptionCommand,
 ];

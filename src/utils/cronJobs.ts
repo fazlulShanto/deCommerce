@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 import { updatePremiumStatusCache } from '@/services/premium.service';
 import cron from 'node-cron';
+import { logger } from './logger';
 
 // Run every hour
 const cronJobs = {
@@ -8,9 +9,9 @@ const cronJobs = {
     cron.schedule('0 * * * *', async (): Promise<void> => {
       try {
         await updatePremiumStatusCache();
-        console.log('Premium cache updated successfully');
+        await logger.info('Premium cache updated successfully' + '@' + new Date().toISOString());
       } catch (error) {
-        console.error('Error updating premium cache:', error);
+        await logger.error('Error updating premium cache', error as Error);
       }
     });
   },

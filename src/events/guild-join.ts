@@ -1,9 +1,16 @@
+import { PremiumInfoDAL } from '@/db/premium-info.dal';
+import { logger } from '@/utils/logger';
 import type { Guild } from 'discord.js';
 
-export const handleGuildCreate = (guild: Guild) => {
+export const handleGuildCreate = async (guild: Guild) => {
   try {
-    console.log(`✅ Added server ${guild.name} to database`);
+    await PremiumInfoDAL.initializeServerPremium(guild.id);
+    await logger.info(`✅ Added server ${guild.name} to database`, {
+      context: { guildId: guild.id, guildName: guild.name },
+    });
   } catch (error) {
-    console.error(`❌ Failed to add server ${guild.name} to database:`, error);
+    await logger.error(`❌ Failed to add server ${guild.name} to database:`, error as Error, {
+      context: { guildId: guild.id, guildName: guild.name },
+    });
   }
 };

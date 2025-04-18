@@ -30,6 +30,8 @@ export interface SlashCommand {
   name: string;
   description: string;
   data: SlashCommandBuilder;
+  isGuildOnly?: boolean;
+  allowedGuildIds?: string[];
   requiredPermissions: (typeof CommandPermissions)[keyof typeof CommandPermissions][];
   execute: (
     interaction: ChatInputCommandInteraction,
