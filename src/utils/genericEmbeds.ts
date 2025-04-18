@@ -43,4 +43,29 @@ const sendEmbed = async ({
   }
 };
 
-export { getGenericErrorEmbed, getGenericSuccessEmbed, sendEmbed };
+const upgradeToPremiumEmbed = () => {
+  return new EmbedBuilder()
+    .setTitle('Upgrade to Premium at $1/month')
+    .setDescription(
+      `Upgrade to Premium to get access to all features.\n
+      \`\`\`Early supporters get 30% off!\`\`\`
+      \n\n`,
+    )
+    .setColor('Yellow')
+    .addFields([
+      {
+        name: '\nCheck your premium status',
+        value: '`/premium`',
+      },
+      {
+        name: '\u200B',
+        value: '[Join our support server](https://discord.gg/ybwcattdK5)',
+      },
+    ])
+    .setFooter({
+      text: 'We offer custom bots for your needs!',
+    })
+    .setTimestamp();
+};
+
+export { getGenericErrorEmbed, getGenericSuccessEmbed, sendEmbed, upgradeToPremiumEmbed };

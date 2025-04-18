@@ -9,7 +9,7 @@ import handleInteractionCreate from './events/interaction-create';
 import { connectToDatabase } from './db/connection';
 import { getStoreConfigFromCache, loadStoreConfigsIntoCache, redis } from './utils/redis';
 import type { Redis } from 'ioredis';
-import { getGenericErrorEmbed } from './utils/genericEmbeds';
+import { getGenericErrorEmbed, upgradeToPremiumEmbed } from './utils/genericEmbeds';
 import cronJobs from './utils/cronJobs';
 import { updatePremiumStatusCache, hasAccessWithCache } from './services/premium.service';
 
@@ -52,24 +52,7 @@ const isPremiumOrTrial = async (interaction: Interaction, shouldReply = true) =>
   const hasAccess = await hasAccessWithCache(interaction.guildId);
   if (shouldReply && !hasAccess) {
     await (interaction as ChatInputCommandInteraction).reply({
-      embeds: [
-        getGenericErrorEmbed(
-          'Failed',
-          'This command is only available to premium or trial subscribers',
-          [
-            {
-              name: 'Check your premium status',
-              value: '`/premium`',
-              inline: true,
-            },
-            {
-              name: 'Join our support server',
-              value: '`https://discord.gg/sTG9X4VJ9x`',
-              inline: true,
-            },
-          ],
-        ),
-      ],
+      embeds: [upgradeToPremiumEmbed()],
     });
   }
   return hasAccess;
