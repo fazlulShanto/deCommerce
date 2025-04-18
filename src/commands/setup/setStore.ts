@@ -27,7 +27,7 @@ export const SetStoreCommand: SlashCommand = {
     .addStringOption((option) =>
       option.setName('currency').setDescription('Set the store currency').setRequired(true),
     ) as SlashCommandBuilder,
-  requiredPermissions: [],
+  requiredPermissions: ['GuildOnly', 'PremiumOrTrial'],
 
   execute: async (interaction: ChatInputCommandInteraction) => {
     const isServerOwner = interaction.guild?.ownerId === interaction.user.id;

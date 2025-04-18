@@ -10,6 +10,8 @@ import { connectToDatabase } from './db/connection';
 import { getStoreConfigFromCache, loadStoreConfigsIntoCache, redis } from './utils/redis';
 import type { Redis } from 'ioredis';
 import { getGenericErrorEmbed } from './utils/genericEmbeds';
+import cronJobs from './utils/cronJobs';
+import { updatePremiumStatusCache, hasAccessWithCache } from './services/premium.service';
 
 dotenv.config();
 
@@ -19,6 +21,7 @@ declare module 'discord.js' {
     globalCacheDb: Redis;
     commands: Collection<string, SlashCommand>;
     isBotAdmin: (interaction: Interaction, shouldReply?: boolean) => Promise<boolean>;
+    isPremiumOrTrial: (interaction: Interaction) => Promise<boolean>;
   }
 }
 
@@ -42,6 +45,36 @@ const isBotAdmin = async (interaction: Interaction, shouldReply = true) => {
   return isBotAdmin;
 };
 
+const isPremiumOrTrial = async (interaction: Interaction, shouldReply = true) => {
+  if (!interaction.guildId || !interaction.member) {
+    return false;
+  }
+  const hasAccess = await hasAccessWithCache(interaction.guildId);
+  if (shouldReply && !hasAccess) {
+    await (interaction as ChatInputCommandInteraction).reply({
+      embeds: [
+        getGenericErrorEmbed(
+          'Failed',
+          'This command is only available to premium or trial subscribers',
+          [
+            {
+              name: 'Check your premium status',
+              value: '`/premium`',
+              inline: true,
+            },
+            {
+              name: 'Join our support server',
+              value: '`https://discord.gg/sTG9X4VJ9x`',
+              inline: true,
+            },
+          ],
+        ),
+      ],
+    });
+  }
+  return hasAccess;
+};
+
 const createAndStartBot = async () => {
   console.clear();
 
@@ -61,7 +94,7 @@ const createAndStartBot = async () => {
 
   client.globalCacheDb = redis;
   client.isBotAdmin = isBotAdmin;
-
+  client.isPremiumOrTrial = isPremiumOrTrial;
   client.commands = getCommandCollection();
   // await checkConnection();
   await registerCommands();
@@ -75,5 +108,8 @@ const createAndStartBot = async () => {
 
   client.login(BOT_TOKEN);
 };
+updatePremiumStatusCache();
+
+cronJobs.updatePremiumStatusCache();
 
 createAndStartBot();

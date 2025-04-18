@@ -20,6 +20,7 @@ import HealthCheckCommand from './utility/healthCheck';
 import ViewStoreConfigCommand from './setup/viewStoreConfig';
 import UpdatePaymentMethodCommand from './payments/updatePaymentMethod';
 import SalesStatsCommand from './utility/salesStats';
+import PremiumCommand from './utility/premium';
 export const botCommands = [
   PingCommand,
   ServerInfoCommand,
@@ -43,4 +44,5 @@ export const botCommands = [
   UpdatePaymentMethodCommand,
   ViewStoreConfigCommand,
   SalesStatsCommand,
+  PremiumCommand,
 ];

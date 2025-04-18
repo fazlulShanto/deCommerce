@@ -50,7 +50,7 @@ export const ProductDetailsCommand: SlashCommand = {
         .setRequired(true),
     ) as SlashCommandBuilder,
 
-  requiredPermissions: ['GuildOnly'],
+  requiredPermissions: ['GuildOnly', 'PremiumOrTrial'],
 
   autocomplete: async (interaction: AutocompleteInteraction) => {
     const focusedValue = interaction.options.getFocused().toLowerCase();

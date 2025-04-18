@@ -3,7 +3,6 @@ import { ActionRowBuilder, StringSelectMenuBuilder, type Interaction } from 'dis
 import { handleModalSubmit } from '@/handlers/modal-handlers';
 import { handleButtonInteractions } from '@/handlers/btn-interaction-handlers';
 import { getStoreConfigFromCache } from '@/utils/redis';
-
 const handleInteractionCreate = async (interaction: Interaction) => {
   if (!interaction.guildId || !interaction.member) {
     return;
@@ -15,6 +14,15 @@ const handleInteractionCreate = async (interaction: Interaction) => {
     const storeConfig = await getStoreConfigFromCache(interaction.guildId);
     try {
       const isBotAdminRequired = command.requiredPermissions.includes('BotAdmin');
+      const isPremiumOrTrialRequired = command.requiredPermissions.includes('PremiumOrTrial');
+
+      if (isPremiumOrTrialRequired) {
+        const hasPremiumOrTrial = await interaction.client.isPremiumOrTrial(interaction);
+        if (!hasPremiumOrTrial) {
+          return;
+        }
+      }
+
       if (isBotAdminRequired) {
         const isBotAdmin = await interaction.client.isBotAdmin(interaction);
         if (!isBotAdmin) {

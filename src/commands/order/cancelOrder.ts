@@ -16,7 +16,7 @@ export const CancelOrderCommand: SlashCommand = {
       option.setName('order-id').setDescription('The ID of the order to cancel').setRequired(true),
     ) as SlashCommandBuilder,
 
-  requiredPermissions: ['BotAdmin', 'GuildOnly'],
+  requiredPermissions: ['BotAdmin', 'GuildOnly', 'PremiumOrTrial'],
 
   execute: async (interaction: ChatInputCommandInteraction, additionalInfo) => {
     try {

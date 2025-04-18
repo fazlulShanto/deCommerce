@@ -15,6 +15,10 @@ export const CommandPermissions = {
   BotAdmin: 'BotAdmin',
   GuildOnly: 'GuildOnly',
   DMOnly: 'DMOnly',
+  PremiumOnly: 'PremiumOnly',
+  TrialOnly: 'TrialOnly',
+  PremiumOrTrial: 'PremiumOrTrial',
+  FreeOnly: 'FreeOnly',
 } as const;
 
 export type AdditionalCommandInfo = {

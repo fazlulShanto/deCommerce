@@ -13,7 +13,7 @@ export const HealthCheckCommand: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('health-check')
     .setDescription('Check the health of the bot'),
-  requiredPermissions: ['Administrator'],
+  requiredPermissions: ['Administrator', 'PremiumOrTrial'],
   execute: async (interaction: ChatInputCommandInteraction) => {
     const storeConfig = await getStoreConfigFromCache(interaction.guildId ?? '');
 

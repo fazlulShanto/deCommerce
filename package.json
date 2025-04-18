@@ -44,11 +44,13 @@
     "lodash": "^4.17.21",
     "lru-cache": "^11.1.0",
     "mongoose": "^8.13.2",
-    "nanoid": "^5.1.5"
+    "nanoid": "^5.1.5",
+    "node-cron": "^3.0.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.24.0",
     "@types/node": "^22.14.0",
+    "@types/node-cron": "^3.0.11",
     "eslint": "^9.24.0",
     "globals": "^16.0.0",
     "prettier": "^3.5.3",

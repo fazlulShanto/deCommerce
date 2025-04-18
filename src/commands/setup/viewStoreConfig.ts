@@ -16,7 +16,7 @@ export const ViewStoreConfigCommand: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName(commandName)
     .setDescription('View the store configuration'),
-  requiredPermissions: ['BotAdmin', 'GuildOnly'],
+  requiredPermissions: ['BotAdmin', 'GuildOnly', 'PremiumOrTrial'],
 
   execute: async (interaction: ChatInputCommandInteraction) => {
     const guildId = interaction.guildId;

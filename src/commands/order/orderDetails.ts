@@ -18,7 +18,7 @@ export const OrderDetailsCommand: SlashCommand = {
         .setRequired(true),
     ) as SlashCommandBuilder,
 
-  requiredPermissions: ['BotAdmin', 'GuildOnly'],
+  requiredPermissions: ['BotAdmin', 'GuildOnly', 'PremiumOrTrial'],
 
   execute: async (interaction: ChatInputCommandInteraction, additionalInfo) => {
     try {

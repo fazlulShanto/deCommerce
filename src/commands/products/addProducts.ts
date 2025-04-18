@@ -18,7 +18,7 @@ export const AddProductsCommand: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName(commandName)
     .setDescription('Add products to the inventory'),
-  requiredPermissions: ['BotAdmin', 'GuildOnly'],
+  requiredPermissions: ['BotAdmin', 'GuildOnly', 'PremiumOrTrial'],
 
   execute: async (interaction: ChatInputCommandInteraction) => {
     const modal = new ModalBuilder().setCustomId('addProductModal').setTitle('Add New Product');

@@ -44,7 +44,7 @@ export const UpdatePaymentMethodCommand: SlashCommand = {
 
     await interaction.respond(choices);
   },
-  requiredPermissions: ['BotAdmin', 'GuildOnly'],
+  requiredPermissions: ['BotAdmin', 'GuildOnly', 'PremiumOrTrial'],
 
   execute: async (interaction: ChatInputCommandInteraction) => {
     const selectedPaymentMethodId = interaction.options.getString('payment-method-name');
