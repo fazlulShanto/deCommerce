@@ -219,7 +219,7 @@ export class Logger {
             color,
             timestamp,
             footer: {
-              text: 'DSOP Bot Logger',
+              text: 'deCommerce Bot Logger',
             },
           },
         ],
