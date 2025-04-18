@@ -130,7 +130,7 @@ const PremiumInfoDAL = {
   // Initialize premium info when bot joins a server
   initializeServerPremium: async (
     guildId: string,
-    defaultTrialDays: number = 1,
+    defaultTrialDays: number = 3,
   ): Promise<PremiumInfoDocument> => {
     // Check if premium info already exists for this guild
     const existingInfo = await PremiumInfoModel.findOne({ guildId });
