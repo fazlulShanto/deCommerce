@@ -75,6 +75,13 @@ const OrderDAL = {
     return OrderModel.find({ customerId });
   },
 
+  getOrdersByCustomerAndGuildId: async (
+    customerId: string,
+    guildId: string,
+  ): Promise<OrderDocument[]> => {
+    return OrderModel.find({ customerId, guildId });
+  },
+
   getOrdersByPaymentMethod: async (paymentMethod: string): Promise<OrderDocument[]> => {
     return OrderModel.find({ paymentMethod });
   },

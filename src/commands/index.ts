@@ -23,6 +23,7 @@ import SalesStatsCommand from './utility/salesStats';
 import PremiumCommand from './utility/premium';
 import ExtendTrialCommand from './admin/extend-trial';
 import RevokeSubscriptionCommand from './admin/revoke-subscription';
+import MyPendingOrdersCommand from './order/myOrder';
 
 export const botCommands = [
   PingCommand,
@@ -50,4 +51,5 @@ export const botCommands = [
   PremiumCommand,
   ExtendTrialCommand,
   RevokeSubscriptionCommand,
+  MyPendingOrdersCommand,
 ];
