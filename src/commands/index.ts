@@ -24,8 +24,11 @@ import PremiumCommand from './utility/premium';
 import ExtendTrialCommand from './admin/extend-trial';
 import RevokeSubscriptionCommand from './admin/revoke-subscription';
 import MyPendingOrdersCommand from './order/myOrder';
+import CreateOrderCommand from './order/createOrder';
+import UptimeCommand from './utility/uptime';
 
 export const botCommands = [
+  UptimeCommand,
   PingCommand,
   ServerInfoCommand,
   BuyCommand,
@@ -52,4 +55,5 @@ export const botCommands = [
   ExtendTrialCommand,
   RevokeSubscriptionCommand,
   MyPendingOrdersCommand,
+  CreateOrderCommand,
 ];

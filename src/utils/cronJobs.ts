@@ -6,7 +6,7 @@ import { logger } from './logger';
 // Run every hour
 const cronJobs = {
   updatePremiumStatusCache: () => {
-    cron.schedule('0 * * * *', async (): Promise<void> => {
+    cron.schedule('0 */6 * * *', async (): Promise<void> => {
       try {
         await updatePremiumStatusCache();
         await logger.info('Premium cache updated successfully' + '@' + new Date().toISOString());

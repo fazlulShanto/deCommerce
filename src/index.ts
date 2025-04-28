@@ -103,6 +103,11 @@ const createAndStartBot = async () => {
     console.log(`✅ Logged in as ${client.user?.tag}!`);
   });
 
+  client.user?.setPresence({
+    activities: [{ name: 'with your orders', type: 2 }],
+    status: 'online',
+  });
+
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
   client.on(Events.InteractionCreate, handleInteractionCreate);
 
