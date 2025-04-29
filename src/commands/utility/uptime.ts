@@ -17,7 +17,7 @@ export const UptimeCommand: SlashCommand = {
     const uptime = process.uptime();
     const startDate = new Date(Date.now() - uptime * 1000);
 
-    const formattedStartDate = formatDistanceToNow(startDate, { addSuffix: true });
+    const formattedStartDate = formatDistanceToNow(startDate, { addSuffix: false });
     const embed = new EmbedBuilder()
       .setTitle('Bot Uptime')
       .setDescription("Here's how long I've been online:")

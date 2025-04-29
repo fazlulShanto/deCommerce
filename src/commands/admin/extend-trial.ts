@@ -1,8 +1,12 @@
 import { MessageFlags, SlashCommandBuilder, type ChatInputCommandInteraction } from 'discord.js';
 import type { SlashCommand } from '../../config/command-handler';
 import { PremiumInfoDAL } from '@/db/premium-info.dal';
-import { invalidatePremiumCache } from '@/services/premium.service';
+import {
+  invalidatePremiumCache,
+  updatePremiumStatusCacheForGuild,
+} from '@/services/premium.service';
 import { logger } from '@/utils/logger';
+import { addDays } from 'date-fns';
 
 const ExtendTrialCommand: SlashCommand = {
   name: 'extend-trial',
@@ -21,8 +25,7 @@ const ExtendTrialCommand: SlashCommand = {
         .setName('days')
         .setDescription('Number of days to extend the trial')
         .setRequired(true)
-        .setMinValue(1)
-        .setMaxValue(20),
+        .setMinValue(1),
     ) as SlashCommandBuilder,
 
   requiredPermissions: [],
@@ -55,9 +58,8 @@ const ExtendTrialCommand: SlashCommand = {
       }
 
       // Calculate new end date
-      const currentEndDate = premiumInfo.trialEndDate || new Date();
-      const newEndDate = new Date(currentEndDate);
-      newEndDate.setDate(newEndDate.getDate() + daysToExtend);
+      const currentEndDate = premiumInfo?.trialEndDate || new Date();
+      let newEndDate = addDays(new Date(currentEndDate), daysToExtend);
 
       // Update the trial information
       const updatedInfo = await PremiumInfoDAL.updatePremiumInfo(guildId, {
@@ -74,6 +76,7 @@ const ExtendTrialCommand: SlashCommand = {
 
       // Invalidate cache to reflect changes immediately
       await invalidatePremiumCache(guildId);
+      await updatePremiumStatusCacheForGuild(guildId);
 
       // Log the action
       await logger.info(

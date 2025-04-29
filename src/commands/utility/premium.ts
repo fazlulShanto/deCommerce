@@ -48,7 +48,7 @@ export const PremiumCommand: SlashCommand = {
       });
 
       premiumTimeRemaining = formatDuration(duration, {
-        format: ['days', 'hours', 'minutes'],
+        format: ['months', 'days', 'hours', 'minutes'],
         delimiter: ', ',
       });
 
@@ -65,7 +65,7 @@ export const PremiumCommand: SlashCommand = {
       });
 
       trialTimeRemaining = formatDuration(duration, {
-        format: ['days', 'hours', 'minutes'],
+        format: ['months', 'days', 'hours', 'minutes'],
         delimiter: ', ',
       });
 
