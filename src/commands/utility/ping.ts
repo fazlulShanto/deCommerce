@@ -5,7 +5,7 @@ export const PingCommand: SlashCommand = {
   name: 'ping',
   description: 'Ping the bot',
   data: new SlashCommandBuilder().setName('ping').setDescription('Ping the bot'),
-  requiredPermissions: ['Administrator'],
+  requiredPermissions: [],
   execute: async (interaction: ChatInputCommandInteraction) => {
     await interaction.reply(`Bot is up and running!🚀`);
   },

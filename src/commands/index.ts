@@ -26,6 +26,7 @@ import RevokeSubscriptionCommand from './admin/revoke-subscription';
 import MyPendingOrdersCommand from './order/myOrder';
 import CreateOrderCommand from './order/createOrder';
 import UptimeCommand from './utility/uptime';
+import DashboardCommand from './admin/dashboard';
 
 export const botCommands = [
   UptimeCommand,
@@ -56,4 +57,5 @@ export const botCommands = [
   RevokeSubscriptionCommand,
   MyPendingOrdersCommand,
   CreateOrderCommand,
+  DashboardCommand,
 ];
