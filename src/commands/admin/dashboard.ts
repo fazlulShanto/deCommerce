@@ -46,7 +46,7 @@ export const DashboardCommand: SlashCommand = {
     const token = await new SignJWT(jwtPayload)
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
-      .setIssuer('bot:user:1234567890')
+      .setIssuer('bot:user:' + interaction.user.id)
       .setExpirationTime('1h')
       .sign(new TextEncoder().encode(jwtSecret));
 
