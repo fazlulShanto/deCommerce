@@ -27,6 +27,7 @@ import MyPendingOrdersCommand from './order/myOrder';
 import CreateOrderCommand from './order/createOrder';
 import UptimeCommand from './utility/uptime';
 import DashboardCommand from './admin/dashboard';
+import ChatCommand from './ai/chat';
 
 export const botCommands = [
   UptimeCommand,
@@ -58,4 +59,5 @@ export const botCommands = [
   MyPendingOrdersCommand,
   CreateOrderCommand,
   DashboardCommand,
+  ChatCommand,
 ];

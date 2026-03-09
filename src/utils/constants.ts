@@ -14,3 +14,10 @@ export const MODAL_IDS = {
   UPDATE_PRODUCT: 'updateProductModal',
   ADD_PRODUCT: 'addProductModal',
 };
+
+export const ALLOWED_OLLAMA_MODELS = [
+  'gpt-oss:120b',
+  'gpt-oss:20b',
+  'gemma3:27b',
+  'qwen3-next:80b',
+];
