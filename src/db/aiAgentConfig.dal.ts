@@ -31,6 +31,24 @@ const agentConfigSchema = new mongoose.Schema(
       min: 0,
       max: 2,
     },
+    topP: {
+      type: Number,
+      default: 0.5,
+      min: 0,
+      max: 2,
+    },
+    retriverScroreThreshold: {
+      type: Number,
+      default: 0.5,
+      min: 0,
+      max: 1,
+    },
+    retriverTopK: {
+      type: Number,
+      default: 4,
+      min: 0,
+      max: 10,
+    },
   },
   { timestamps: true },
 );

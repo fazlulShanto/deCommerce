@@ -1,78 +1,102 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const productSchema = new mongoose.Schema(
-  {
-    name: String,
-    description: String,
-    price: Number,
-    emoji: { type: String, default: '' },
-    isAvailable: { type: Boolean, default: true },
-    guildId: String,
-  },
-  {
-    timestamps: true,
-  },
+    {
+        name: String,
+        description: String,
+        price: Number,
+        emoji: { type: String, default: "" },
+        isAvailable: { type: Boolean, default: true },
+        guildId: String,
+        training_status: {
+            type: String,
+            enum: ["not_trained", "training", "trained", "failed"],
+            default: "not_trained",
+        },
+        qdrant_point_id: { type: String, default: null },
+        trained_at: { type: Date, default: null },
+    },
+    {
+        timestamps: true,
+    },
 );
 
 interface ProductDocument extends mongoose.Document {
-  _id: mongoose.Types.ObjectId;
-  name: string;
-  description: string;
-  price: number;
-  emoji: string;
-  isAvailable: boolean;
-  guildId: string;
-  createdAt: Date;
-  updatedAt: Date;
+    _id: mongoose.Types.ObjectId;
+    name: string;
+    description: string;
+    price: number;
+    emoji: string;
+    isAvailable: boolean;
+    guildId: string;
+    training_status: "not_trained" | "training" | "trained" | "failed";
+    qdrant_point_id: string | null;
+    trained_at: Date | null;
+    createdAt: Date;
+    updatedAt: Date;
 }
 
-const ProductModel = mongoose.model<ProductDocument>('products', productSchema);
+// Check if the model exists before creating it
+const ProductModel =
+    mongoose.models.products ||
+    mongoose.model<ProductDocument>("products", productSchema);
 
 const ProductDAL = {
-  createProduct: async (
-    product: Omit<ProductDocument, 'createdAt' | 'updatedAt' | '_id'>,
-  ): Promise<ProductDocument> => {
-    return ProductModel.create(product);
-  },
+    createProduct: async (
+        product: Omit<ProductDocument, "createdAt" | "updatedAt" | "_id">,
+    ): Promise<ProductDocument> => {
+        return ProductModel.create(product);
+    },
 
-  updateProduct: async (product: Partial<ProductDocument>): Promise<ProductDocument | null> => {
-    return ProductModel.findOneAndUpdate(
-      { name: product.name, guildId: product.guildId },
-      product,
-      { new: true },
-    );
-  },
+    updateProduct: async (
+        product: Partial<ProductDocument>,
+    ): Promise<ProductDocument | null> => {
+        return ProductModel.findOneAndUpdate(
+            { name: product.name, guildId: product.guildId },
+            product,
+            { new: true },
+        );
+    },
 
-  updateProductById: async (product: Partial<ProductDocument>): Promise<ProductDocument | null> => {
-    return ProductModel.findOneAndUpdate({ _id: product._id }, product, { new: true });
-  },
+    updateProductById: async (
+        product: Partial<ProductDocument>,
+    ): Promise<ProductDocument | null> => {
+        return ProductModel.findOneAndUpdate({ _id: product._id }, product, {
+            new: true,
+        });
+    },
 
-  getAllProducts: async (): Promise<ProductDocument[]> => {
-    return ProductModel.find();
-  },
+    getAllProducts: async (): Promise<ProductDocument[]> => {
+        return ProductModel.find();
+    },
 
-  getProductsByGuildId: async (guildId: string): Promise<ProductDocument[]> => {
-    return ProductModel.find({ guildId });
-  },
+    getProductsByGuildId: async (
+        guildId: string,
+    ): Promise<ProductDocument[]> => {
+        return ProductModel.find({ guildId });
+    },
 
-  getProductById: async (id: string): Promise<ProductDocument | null> => {
-    return ProductModel.findById(id);
-  },
+    getProductById: async (id: string): Promise<ProductDocument | null> => {
+        return ProductModel.findById(id);
+    },
 
-  getProductByName: async (name: string, guildId: string): Promise<ProductDocument | null> => {
-    return ProductModel.findOne({ name, guildId });
-  },
+    getProductByName: async (
+        name: string,
+        guildId: string,
+    ): Promise<ProductDocument | null> => {
+        return ProductModel.findOne({ name, guildId });
+    },
 
-  deleteSingleProduct: async (
-    productId: string,
-    guildId: string,
-  ): Promise<ProductDocument | null> => {
-    return ProductModel.findOneAndDelete({ _id: productId, guildId });
-  },
+    deleteSingleProduct: async (
+        productId: string,
+        guildId: string,
+    ): Promise<ProductDocument | null> => {
+        return ProductModel.findOneAndDelete({ _id: productId, guildId });
+    },
 
-  deleteProductsByGuildId: async (guildId: string) => {
-    return ProductModel.deleteMany({ guildId });
-  },
+    deleteProductsByGuildId: async (guildId: string) => {
+        return ProductModel.deleteMany({ guildId });
+    },
 };
 
 export { ProductDAL, ProductModel, type ProductDocument };

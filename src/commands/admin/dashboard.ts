@@ -47,11 +47,11 @@ export const DashboardCommand: SlashCommand = {
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
       .setIssuer('bot:user:' + interaction.user.id)
-      .setExpirationTime('1h')
+      .setExpirationTime('1d')
       .sign(new TextEncoder().encode(jwtSecret));
 
     // set it to redis
-    await interaction.client.globalCacheDb.setex(tokenKey, 1 * 3600, token);
+    await interaction.client.globalCacheDb.setex(tokenKey, 1 * 86400, token);
     // attach to url
     const dashboardUrlWithToken = new URL(dashboardUrl + '/dashboard');
     dashboardUrlWithToken.searchParams.set('token', token);
@@ -68,7 +68,7 @@ export const DashboardCommand: SlashCommand = {
 
     container.addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
-        [`### :link: Dashboard Link(Valid for 1 hour)\n`].join('\n'),
+        [`### :link: Dashboard Link(Valid for 1 day)\n`].join('\n'),
       ),
     );
 
