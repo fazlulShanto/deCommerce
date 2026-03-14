@@ -1,5 +1,5 @@
 [phases.setup]
-nixPkgs = ['nodejs_24', 'pnpm']
+nixPkgs = ['nodejs_24','bun', 'pnpm']
 
 [phases.install]
 cmds = ['pnpm install --frozen-lockfile']
@@ -8,4 +8,4 @@ cmds = ['pnpm install --frozen-lockfile']
 cmds = ['pnpm run build']
 
 [start]
-cmd = 'pnpm run start'
+cmd = 'pnpm run start:bun'
