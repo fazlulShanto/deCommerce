@@ -1,12 +1,11 @@
 [phases.setup]
-nixPkgs = ['bun']
+nixPkgs = ['nodejs_24', 'pnpm']
 
 [phases.install]
-# We use 'cd .' to ensure we are in the context Nixpacks expects
-cmds = ['cd . && bun install --frozen-lockfile']
+cmds = ['pnpm install --frozen-lockfile']
 
 [phases.build]
-cmds = ['bun run build']
+cmds = ['pnpm run build']
 
 [start]
-cmd = 'bun run start'
+cmd = 'pnpm run start'
