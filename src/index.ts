@@ -99,6 +99,9 @@ const createAndStartBot = async () => {
   // await checkConnection();
   await registerCommands();
 
+  // Start Giveaway Cron
+  cronJobs.checkGiveaways(client);
+
   client.once('ready', () => {
     console.log(`✅ Logged in as ${client.user?.tag}!`);
   });

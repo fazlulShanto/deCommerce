@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
+import { checkGiveaways } from '@/services/giveaway.service';
 import { updatePremiumStatusCache } from '@/services/premium.service';
+import type { Client } from 'discord.js';
 import cron from 'node-cron';
 import { logger } from './logger';
 
@@ -12,6 +14,15 @@ const cronJobs = {
         await logger.info('Premium cache updated successfully' + '@' + new Date().toISOString());
       } catch (error) {
         await logger.error('Error updating premium cache', error as Error);
+      }
+    });
+  },
+  checkGiveaways: (client: Client) => {
+    cron.schedule('* * * * *', async (): Promise<void> => {
+      try {
+        await checkGiveaways(client);
+      } catch (error) {
+        await logger.error('Error checking giveaways', error as Error);
       }
     });
   },

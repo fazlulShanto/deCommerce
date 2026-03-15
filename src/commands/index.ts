@@ -28,6 +28,7 @@ import CreateOrderCommand from './order/createOrder';
 import UptimeCommand from './utility/uptime';
 import DashboardCommand from './admin/dashboard';
 import ChatCommand from './ai/chat';
+import GiveawayCommand from './admin/giveaway';
 
 export const botCommands = [
   UptimeCommand,
@@ -60,4 +61,5 @@ export const botCommands = [
   CreateOrderCommand,
   DashboardCommand,
   ChatCommand,
+  GiveawayCommand,
 ];
