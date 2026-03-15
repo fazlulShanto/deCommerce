@@ -1,5 +1,10 @@
 import type { AutocompleteInteraction } from 'discord.js';
-import { EmbedBuilder, SlashCommandBuilder, type ChatInputCommandInteraction } from 'discord.js';
+import {
+  EmbedBuilder,
+  MessageFlags,
+  SlashCommandBuilder,
+  type ChatInputCommandInteraction,
+} from 'discord.js';
 import { ProductDAL } from '../../db/product.dal';
 import type { SlashCommand } from '../../config/command-handler';
 import { getGenericErrorEmbed } from '@/utils/genericEmbeds';
@@ -104,7 +109,7 @@ export const ProductDetailsCommand: SlashCommand = {
       console.error('Error fetching products:', error);
       await interaction.followUp({
         content: 'There was an error while fetching the products!',
-        ephemeral: true,
+        flags: [MessageFlags.Ephemeral],
       });
     }
   },

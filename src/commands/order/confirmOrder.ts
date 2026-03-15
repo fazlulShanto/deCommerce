@@ -3,6 +3,7 @@ import {
   SlashCommandBuilder,
   type ChatInputCommandInteraction,
   type AutocompleteInteraction,
+  MessageFlags,
 } from 'discord.js';
 import { OrderDAL } from '../../db/order.dal';
 import type { SlashCommand } from '../../config/command-handler';
@@ -141,7 +142,7 @@ export const ConfirmOrderCommand: SlashCommand = {
       console.error('Error confirming order:', error);
       await interaction.reply({
         content: 'There was an error while confirming the order!',
-        ephemeral: true,
+        flags: [MessageFlags.Ephemeral],
       });
     }
   },

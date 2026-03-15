@@ -6,6 +6,7 @@ import {
   TextInputBuilder,
   type ChatInputCommandInteraction,
   ActionRowBuilder,
+  MessageFlags,
 } from 'discord.js';
 import { OrderDAL } from '../../db/order.dal';
 import type { SlashCommand } from '../../config/command-handler';
@@ -80,7 +81,7 @@ export const DeliveryProductCommand: SlashCommand = {
       console.error('Error fetching orders:', error);
       await interaction.reply({
         content: 'There was an error while fetching the orders!',
-        ephemeral: true,
+        flags: [MessageFlags.Ephemeral],
       });
     }
   },

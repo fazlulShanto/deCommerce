@@ -1,5 +1,10 @@
 /* eslint-disable @typescript-eslint/no-floating-promises -- just a try catch */
-import { ActionRowBuilder, StringSelectMenuBuilder, type Interaction } from 'discord.js';
+import {
+  ActionRowBuilder,
+  MessageFlags,
+  StringSelectMenuBuilder,
+  type Interaction,
+} from 'discord.js';
 import { handleModalSubmit } from '@/handlers/modal-handlers';
 import { handleButtonInteractions } from '@/handlers/btn-interaction-handlers';
 import { getStoreConfigFromCache } from '@/utils/redis';
@@ -37,7 +42,7 @@ const handleInteractionCreate = async (interaction: Interaction) => {
       console.error(error);
       interaction.reply({
         content: 'There was an error while executing this command!',
-        ephemeral: true,
+        flags: [MessageFlags.Ephemeral],
       });
     }
   }

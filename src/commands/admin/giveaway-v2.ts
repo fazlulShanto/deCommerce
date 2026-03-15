@@ -11,16 +11,14 @@ import {
   generateGiveawayDashboard,
   saveGiveawayWizardState,
 } from '../../services/giveaway-wizard.service';
-import { endGiveaway } from '../../services/giveaway.service';
-import { redis } from '../../utils/redis';
 
-export const GiveawayCommand: SlashCommand = {
-  name: 'giveaway',
-  description: 'Manage giveaways with Stepper Wizard',
+export const GiveawayV2Command: SlashCommand = {
+  name: 'giveaway_v2',
+  description: 'Manage giveaways with Stepper Wizard (v2)',
   isGuildOnly: true,
   data: new SlashCommandBuilder()
-    .setName('giveaway')
-    .setDescription('Manage giveaways with Stepper Wizard')
+    .setName('giveaway_v2')
+    .setDescription('Manage giveaways with Stepper Wizard (v2)')
     // START Subcommand
     .addSubcommand((subcommand) =>
       subcommand.setName('start').setDescription('Start a giveaway configuration wizard'),
@@ -34,19 +32,6 @@ export const GiveawayCommand: SlashCommand = {
           option
             .setName('message_id')
             .setDescription('Select the giveaway to edit')
-            .setRequired(true)
-            .setAutocomplete(true),
-        ),
-    )
-    // END Subcommand
-    .addSubcommand((subcommand) =>
-      subcommand
-        .setName('end')
-        .setDescription('End dry giveaway early')
-        .addStringOption((option) =>
-          option
-            .setName('message_id')
-            .setDescription('Select the giveaway to end')
             .setRequired(true)
             .setAutocomplete(true),
         ),
@@ -130,10 +115,6 @@ export const GiveawayCommand: SlashCommand = {
         await interaction.reply({ ...dashboard, flags: [MessageFlags.Ephemeral] });
         break;
       }
-      case 'end': {
-        await handleEnd(interaction);
-        break;
-      }
       default:
         await interaction.reply({
           content: 'Unknown subcommand.',
@@ -143,30 +124,4 @@ export const GiveawayCommand: SlashCommand = {
   },
 };
 
-const handleEnd = async (interaction: ChatInputCommandInteraction) => {
-  const messageId = interaction.options.getString('message_id', true);
-
-  await interaction.reply({ content: 'Ending giveaway...', flags: [MessageFlags.Ephemeral] });
-
-  const giveaway = await GiveawayDAL.getGiveawayByMessageId(messageId);
-  if (!giveaway) {
-    await interaction.editReply({ content: '❌ Giveaway not found.' });
-    return;
-  }
-
-  if (giveaway.ended) {
-    await interaction.editReply({ content: '❌ This giveaway has already ended.' });
-    return;
-  }
-
-  try {
-    await endGiveaway(interaction.client, giveaway);
-    await redis.zrem('giveaway:end_queue', messageId);
-    await interaction.editReply({ content: '✅ Giveaway ended successfully early!' });
-  } catch (error) {
-    console.error('Error ending giveaway early:', error);
-    await interaction.editReply({ content: '❌ Failed to end giveaway early.' });
-  }
-};
-
-export default GiveawayCommand;
+export default GiveawayV2Command;

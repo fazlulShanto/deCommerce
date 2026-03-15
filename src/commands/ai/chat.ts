@@ -1,4 +1,9 @@
-import { SlashCommandBuilder, type ChatInputCommandInteraction, TextChannel } from 'discord.js';
+import {
+  SlashCommandBuilder,
+  type ChatInputCommandInteraction,
+  TextChannel,
+  MessageFlags,
+} from 'discord.js';
 import type { SlashCommand } from '../../config/command-handler';
 
 import { getOrCreateAgentConfig } from '@/db/aiAgentConfig.dal.js';
@@ -19,7 +24,7 @@ export const ChatCommand: SlashCommand = {
     if (!guildId) {
       await interaction.reply({
         content: '❌ This command can only be used in a server.',
-        ephemeral: true,
+        flags: [MessageFlags.Ephemeral],
       });
       return;
     }

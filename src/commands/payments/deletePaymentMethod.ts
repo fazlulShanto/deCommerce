@@ -1,5 +1,10 @@
 import type { AutocompleteInteraction } from 'discord.js';
-import { EmbedBuilder, SlashCommandBuilder, type ChatInputCommandInteraction } from 'discord.js';
+import {
+  EmbedBuilder,
+  MessageFlags,
+  SlashCommandBuilder,
+  type ChatInputCommandInteraction,
+} from 'discord.js';
 import type { SlashCommand } from '../../config/command-handler';
 import { getGenericErrorEmbed } from '@/utils/genericEmbeds';
 import { MAX_AUTOCOMPLETE_CHOICES } from '@/utils/constants';
@@ -89,7 +94,7 @@ export const DeletePaymentMethodCommand: SlashCommand = {
       console.error('Error fetching payment methods:', error);
       await interaction.reply({
         content: 'There was an error while fetching the payment methods!',
-        ephemeral: true,
+        flags: [MessageFlags.Ephemeral],
       });
     }
   },

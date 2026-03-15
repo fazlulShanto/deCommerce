@@ -78,7 +78,7 @@ export const MyOrdersCommand: SlashCommand = {
               `You have no orders with the status "${filterStatus}" at the moment.`, // Dynamic description
             ),
           ],
-          ephemeral: true, // Make this ephemeral so only the user sees it
+          flags: [MessageFlags.Ephemeral], // only the user sees it
         });
         return;
       }

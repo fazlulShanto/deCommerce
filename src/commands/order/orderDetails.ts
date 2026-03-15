@@ -1,4 +1,9 @@
-import { EmbedBuilder, SlashCommandBuilder, type ChatInputCommandInteraction } from 'discord.js';
+import {
+  EmbedBuilder,
+  MessageFlags,
+  SlashCommandBuilder,
+  type ChatInputCommandInteraction,
+} from 'discord.js';
 import { OrderDAL } from '../../db/order.dal';
 import type { SlashCommand } from '../../config/command-handler';
 import { getGenericErrorEmbed } from '@/utils/genericEmbeds';
@@ -100,7 +105,7 @@ export const OrderDetailsCommand: SlashCommand = {
       console.error('Error fetching orders:', error);
       await interaction.reply({
         content: 'There was an error while fetching the orders!',
-        ephemeral: true,
+        flags: [MessageFlags.Ephemeral],
       });
     }
   },

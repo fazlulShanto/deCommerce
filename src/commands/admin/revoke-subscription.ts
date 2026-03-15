@@ -35,7 +35,7 @@ const RevokeSubscriptionCommand: SlashCommand = {
       return;
     }
 
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
 
     const guildId = interaction.options.getString('guild_id', true);
 

@@ -4,6 +4,7 @@ import {
   ButtonBuilder,
   ButtonStyle,
   EmbedBuilder,
+  MessageFlags,
   SlashCommandBuilder,
   type ChatInputCommandInteraction,
 } from 'discord.js';
@@ -163,7 +164,7 @@ export const BuyCommand: SlashCommand = {
       console.error('Error fetching products:', error);
       await interaction.followUp({
         content: 'There was an error while fetching the products!',
-        ephemeral: true,
+        flags: [MessageFlags.Ephemeral],
       });
     }
   },

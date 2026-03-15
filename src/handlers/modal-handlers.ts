@@ -8,6 +8,11 @@ import { PaymentMethodDAL, type PaymentMethodData } from '@/db/payment-method.da
 import { OrderDAL } from '@/db/order.dal';
 import { MODAL_IDS } from '@/utils/constants';
 import { getPaymentMethodDetailsEmbed } from '@/commands/payments/paymentMethodDetails';
+import {
+  getGiveawayWizardState,
+  saveGiveawayWizardState,
+  generateGiveawayDashboard,
+} from '@/services/giveaway-wizard.service';
 
 // Define the product schema with Zod
 const productSchema = z.object({
@@ -264,13 +269,70 @@ export const handleModalSubmit = async (interaction: ModalSubmitInteraction) => 
       return;
     }
 
+    if (interaction.customId.startsWith('giveaway_v2_modal_')) {
+      await handleGiveawayV2ModalStep(interaction);
+      return;
+    }
+
     await interaction.reply({
       embeds: [getGenericErrorEmbed('Invalid modal', 'Please try again.')],
     });
   } catch {
     await interaction.reply({
       content: 'There was an error while processing your request.',
-      ephemeral: true,
+      flags: [MessageFlags.Ephemeral],
+    });
+  }
+};
+
+export const handleGiveawayV2ModalStep = async (interaction: ModalSubmitInteraction) => {
+  const customId = interaction.customId; // giveaway_v2_modal_1:userId
+  const [modalId, userId] = customId.split(':');
+  const stepNumber = modalId.split('_').pop(); // '1', '2', '3'
+
+  const state = await getGiveawayWizardState(userId);
+  if (!state) {
+    await interaction.reply({
+      content: '❌ Setup session expired.',
+      flags: [MessageFlags.Ephemeral],
+    });
+    return;
+  }
+
+  if (stepNumber === '1') {
+    state.prize = interaction.fields.getTextInputValue('prize');
+    state.duration = interaction.fields.getTextInputValue('duration');
+    state.winnersCount = parseInt(interaction.fields.getTextInputValue('winners')) || 1;
+    const leaves = interaction.fields.getTextInputValue('allowLeave')?.toLowerCase();
+    state.allowLeave = leaves === 'y' || leaves === 'yes';
+    state.startDelay = interaction.fields.getTextInputValue('startDelay') || 'None';
+  } else if (stepNumber === '2') {
+    state.blacklistedRoles =
+      interaction.fields
+        .getTextInputValue('blacklistedRoles')
+        ?.split(',')
+        .map((s) => s.trim())
+        .filter(Boolean) || [];
+    state.blacklistedUsers =
+      interaction.fields
+        .getTextInputValue('blacklistedUsers')
+        ?.split(',')
+        .map((s) => s.trim())
+        .filter(Boolean) || [];
+  } else if (stepNumber === '3') {
+    state.description = interaction.fields.getTextInputValue('description') || '';
+  }
+
+  await saveGiveawayWizardState(userId, state);
+  const dashboard = generateGiveawayDashboard(state);
+
+  if (interaction.isFromMessage()) {
+    await interaction.update({ embeds: dashboard.embeds, components: dashboard.components });
+  } else {
+    await interaction.reply({
+      embeds: dashboard.embeds,
+      components: dashboard.components,
+      flags: [MessageFlags.Ephemeral],
     });
   }
 };
