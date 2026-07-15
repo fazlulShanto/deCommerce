@@ -1,7 +1,6 @@
-import { generateText } from 'ai';
+import { generateText, stepCountIs, type ModelMessage, type ToolSet } from 'ai';
 
-import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
-import { ALLOWED_OLLAMA_MODELS } from '@/utils/constants';
+import { getWaveModel, WAVE_MODEL_ID, WAVE_TIMEOUT_MS } from '@/utils/aiConfig.js';
 
 export interface UserContext {
   name: string;
@@ -13,36 +12,36 @@ export interface ChatMessage {
   content: string;
 }
 
-export interface ChatOptions {
+export interface ChatOptions<TOOLS extends ToolSet = ToolSet> {
   model?: string;
-  fallbackModel?: string;
   systemPrompt: string;
   userMessage: string;
   userContext?: UserContext;
-  serverContext?: Record<string, any>;
+  serverContext?: Record<string, unknown>;
   chatHistory?: ChatMessage[];
   temperature?: number;
+  maxOutputTokens?: number;
+  timeoutMs?: number;
+  tools?: TOOLS;
 }
-const ollamaProvider = createOpenAICompatible({
-  name: 'ollama',
-  apiKey: process.env.OLLAMA_KEY,
-  baseURL: 'https://ollama.com/v1/',
-  includeUsage: true, // Include usage information in streaming responses
-});
 
 /**
- * Generate a chat response using the AI SDK with Ollama.
- * Falls back to the fallback model if the primary fails.
+ * Generate a chat response with Wave and return the complete AI SDK result.
  */
-export async function handleChatMessageGeneration(options: ChatOptions): Promise<string> {
+export async function handleChatMessageGeneration<TOOLS extends ToolSet = ToolSet>(
+  options: ChatOptions<TOOLS>,
+) {
   const {
-    model = 'gemma3:27b',
+    model = WAVE_MODEL_ID,
     systemPrompt,
     userMessage,
     userContext,
     serverContext = {},
     chatHistory = [],
-    temperature = 0.5,
+    temperature = 0.9,
+    maxOutputTokens = 5200,
+    timeoutMs = WAVE_TIMEOUT_MS,
+    tools,
   } = options;
 
   // Append user context to the system prompt if provided
@@ -56,21 +55,21 @@ export async function handleChatMessageGeneration(options: ChatOptions): Promise
       (userContext.roles.length ? `\nRoles: ${userContext.roles.join(', ')}` : '');
   }
 
-  const messages = [
-    { role: 'system' as const, content: fullSystemPrompt },
-    // Inject prior turns (user + assistant pairs) as chat history
+  const messages: ModelMessage[] = [
     ...chatHistory.map((msg) => ({ role: msg.role, content: msg.content })),
     { role: 'user' as const, content: userMessage },
-  ].filter((msg) => msg.content && msg.content.trim() !== ''); // Remove empty messages
+  ].filter((message) => message.content.trim() !== '');
 
-  try {
-    const response = await generateText({
-      model: ollamaProvider(ALLOWED_OLLAMA_MODELS.includes(model) ? model : 'gemma3:27b'),
-      messages,
-      temperature,
-    });
-    return response.text;
-  } catch (error) {
-    throw error;
-  }
+  return generateText({
+    model: getWaveModel(model),
+    system: fullSystemPrompt,
+    messages,
+    temperature,
+    // maxOutputTokens,
+    timeout: timeoutMs,
+    tools,
+    stopWhen: stepCountIs(5),
+  });
 }
+
+export type ChatGenerationResult = Awaited<ReturnType<typeof handleChatMessageGeneration>>;

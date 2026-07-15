@@ -3,11 +3,18 @@ import {
   type ChatInputCommandInteraction,
   TextChannel,
   MessageFlags,
+  GuildMember,
 } from 'discord.js';
 import type { SlashCommand } from '../../config/command-handler';
 
+import { createAnnouncementTool } from '@/ai-tools/announcement.js';
+import { createPollTool } from '@/ai-tools/poll.js';
 import { getOrCreateAgentConfig } from '@/db/aiAgentConfig.dal.js';
-import { ChatMessage, handleChatMessageGeneration, UserContext } from '@/services/chat.service.js';
+import {
+  handleChatMessageGeneration,
+  type ChatMessage,
+  type UserContext,
+} from '@/services/chat.service.js';
 
 export const ChatCommand: SlashCommand = {
   name: 'chat',
@@ -20,8 +27,8 @@ export const ChatCommand: SlashCommand = {
     ) as SlashCommandBuilder,
   requiredPermissions: ['PremiumOrTrial'],
   async execute(interaction: ChatInputCommandInteraction) {
-    const guildId = interaction.guildId;
-    if (!guildId) {
+    const guild = interaction.guild;
+    if (!guild) {
       await interaction.reply({
         content: '❌ This command can only be used in a server.',
         flags: [MessageFlags.Ephemeral],
@@ -36,15 +43,15 @@ export const ChatCommand: SlashCommand = {
 
     try {
       // Load per-server agent config
-      const config = await getOrCreateAgentConfig(guildId);
+      const config = await getOrCreateAgentConfig(guild.id);
 
       // Build user context from the invoking member
       const member = interaction.member;
       const userContext: UserContext = {
         name: interaction.user.globalName ?? interaction.user.username,
         roles:
-          member && 'roles' in member && typeof member.roles === 'object' && 'cache' in member.roles
-            ? [...member.roles.cache.values()]
+          member instanceof GuildMember
+            ? Array.from(member.roles.cache.values())
                 .filter((r) => r.name !== '@everyone')
                 .map((r) => r.name)
             : [],
@@ -60,13 +67,13 @@ export const ChatCommand: SlashCommand = {
         });
 
         // Messages arrive newest-first; reverse to chronological order.
-        const chronological = [...fetched.values()].reverse();
+        const chronological = Array.from(fetched.values()).reverse();
 
         // Build user/assistant pairs.
         // A "user" message is any non-bot message.
         // An "assistant" message is a bot reply that immediately follows a user message.
         for (let i = 0; i < chronological.length; i++) {
-          const msg = chronological[i]!;
+          const msg = chronological[i];
           if (msg.author.bot) continue; // skip standalone bot messages
 
           // This is a human message
@@ -87,31 +94,47 @@ export const ChatCommand: SlashCommand = {
         chatHistory = chatHistory.slice(-10);
       }
 
-      // Generate response
-      const response = await handleChatMessageGeneration({
-        model: config.chatModel,
-        fallbackModel: config.fallbackModel,
+      const owner = await guild
+        .fetchOwner()
+        .then((guildOwner) => guildOwner.user.tag)
+        .catch(() => undefined);
+
+      const tools = {
+        postAnnouncement: createAnnouncementTool({
+          guild,
+          requesterId: interaction.user.id,
+          defaultChannelId: interaction.channelId,
+        }),
+        createPoll: createPollTool({
+          guild,
+          requesterId: interaction.user.id,
+          defaultChannelId: interaction.channelId,
+        }),
+      };
+
+      // Generate a response and retain the complete AI SDK result for usage/metadata access.
+      const result = await handleChatMessageGeneration({
         systemPrompt: config.systemPrompt,
         userMessage,
         userContext,
         serverContext: {
-          name: interaction.guild?.name,
-          description: interaction.guild?.description,
-          owner: interaction.guild
-            ?.fetchOwner()
-            .then((owner) => owner.user.tag)
-            .catch(() => undefined), // Example of fetching additional server context
+          name: guild.name,
+          description: guild.description,
+          owner,
         },
         chatHistory,
         temperature: config.temperature,
+        maxOutputTokens: 5000,
+        tools,
       });
+      const response = result.text;
 
       // Discord has a 2000 char limit
       if (response.length > 2000) {
         const chunks = splitMessage(response, 2000);
-        await interaction.editReply(chunks[0]!);
+        await interaction.editReply(chunks[0]);
         for (let i = 1; i < chunks.length; i++) {
-          await interaction.followUp(chunks[i]!);
+          await interaction.followUp(chunks[i]);
         }
       } else {
         await interaction.editReply(response || '_(No response generated)_');
