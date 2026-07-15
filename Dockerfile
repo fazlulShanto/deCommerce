@@ -3,11 +3,12 @@ FROM node:24-slim AS builder
 
 WORKDIR /app
 
-# Install pnpm
-RUN npm install -g pnpm
+# Pin pnpm so dependency-install behavior stays reproducible
+ARG PNPM_VERSION=11.13.0
+RUN npm install -g "pnpm@${PNPM_VERSION}"
 
-# Copy package files
-COPY package.json pnpm-lock.yaml* ./
+# Copy dependency metadata, including build-script approvals
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
 # Install ALL dependencies (including devDependencies)
 # Using frozen-lockfile to ensure reproducible builds from pnpm-lock.yaml
