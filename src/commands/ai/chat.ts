@@ -8,6 +8,7 @@ import type { SlashCommand } from '../../config/command-handler';
 
 import { createAnnouncementTool } from '@/ai-tools/announcement.js';
 import { createPollTool } from '@/ai-tools/poll.js';
+import { createDuckDuckGoSearchTool } from '@/ai-tools/duckduckgo-search.js';
 import { getMemoryConfig } from '@/config/memory.js';
 import { getOrCreateAgentConfig } from '@/db/aiAgentConfig.dal.js';
 import {
@@ -203,6 +204,7 @@ export const ChatCommand: SlashCommand = {
           requesterId: interaction.user.id,
           defaultChannelId: interaction.channelId,
         }),
+        duckDuckGoSearch: createDuckDuckGoSearchTool(),
       };
 
       // Generate a response and retain the complete AI SDK result for usage/metadata access.

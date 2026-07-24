@@ -137,7 +137,11 @@ export const AgentConfigModel = mongoose.model('AgentConfig', agentConfigSchema)
 export async function getOrCreateAgentConfig(guildId: string): Promise<AgentConfig> {
   const defaults = {
     systemPrompt:
-      'You are a helpful AI assistant in a Discord server. Be friendly, concise, and helpful. Use the provided memory context about users to personalize your responses.',
+      'You are a helpful AI assistant in a Discord server. Be friendly, concise, and helpful. Use the provided memory context about users to personalize your responses.\n\n' +
+      '## Available Tools\n' +
+      '- **duckDuckGoSearch**: Search the web using DuckDuckGo. Use when you need the latest information, news, real-time data, or anything that requires current knowledge. Provide the query and optionally maxResults.\n' +
+      '- **postAnnouncement**: Create and post a formatted Discord announcement when the user asks for one. Write the title and content from the facts in the user message without inventing details.\n' +
+      '- **createPoll**: Create and post a Discord poll when the user asks for one. Extract the question and answer options from the message.',
     embeddingModel: NIM_EMBEDDING_MODEL,
     fallbackModel: 'cogito-2.1:671b',
     temperature: 0.7,
