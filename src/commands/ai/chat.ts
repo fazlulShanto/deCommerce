@@ -38,6 +38,41 @@ async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T
   }
 }
 
+function getDiscordErrorCode(error: unknown): number | undefined {
+  if (!error || typeof error !== 'object' || !('code' in error)) return undefined;
+  return typeof error.code === 'number' ? error.code : undefined;
+}
+
+async function acknowledgeChatInteraction(
+  interaction: ChatInputCommandInteraction,
+  privateReply: boolean,
+): Promise<boolean> {
+  if (interaction.deferred || interaction.replied) return true;
+
+  try {
+    if (privateReply) {
+      await interaction.deferReply();
+    } else {
+      await interaction.deferReply();
+    }
+    return true;
+  } catch (error) {
+    const errorCode = getDiscordErrorCode(error);
+    if (errorCode !== 40060 && errorCode !== 10062) throw error;
+
+    logger.warn(
+      {
+        event: 'discord.chat.acknowledgement.unavailable',
+        commandName: 'chat',
+        guildId: interaction.guildId,
+        errorCode,
+      },
+      'Chat command yielded because the interaction was already acknowledged or expired',
+    );
+    return false;
+  }
+}
+
 export const ChatCommand: SlashCommand = {
   name: 'chat',
   description: 'Chat with the AI agent',
@@ -77,14 +112,9 @@ export const ChatCommand: SlashCommand = {
         );
       }
     }
-    const privateReply =
-      deploymentMemoryEnabled && (!memoryStateKnown || runtimeMemoryConfig?.memoryEnabled === true);
+    const privateReply = false;
 
-    if (privateReply) {
-      await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
-    } else {
-      await interaction.deferReply();
-    }
+    if (!(await acknowledgeChatInteraction(interaction, privateReply))) return;
 
     try {
       // Load per-server agent config
@@ -201,7 +231,10 @@ export const ChatCommand: SlashCommand = {
         for (let i = 1; i < chunks.length; i++) {
           await interaction.followUp(
             privateReply
-              ? { content: chunks[i], flags: [MessageFlags.Ephemeral] }
+              ? {
+                  content: chunks[i],
+                  //  flags: [MessageFlags.Ephemeral]
+                }
               : { content: chunks[i] },
           );
         }

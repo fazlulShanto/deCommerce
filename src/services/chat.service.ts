@@ -9,6 +9,7 @@ import {
 
 import { getWaveModel, WAVE_MODEL_ID, WAVE_TIMEOUT_MS } from '@/utils/aiConfig.js';
 import type { RetrievedMemory } from '@/services/user-memory.service.js';
+import { logger } from '@/utils/logger';
 
 export interface UserContext {
   name: string;
@@ -146,6 +147,24 @@ export async function handleChatMessageGeneration<TOOLS extends ToolSet = ToolSe
     memoryContextMaxChars,
   });
   const messages = buildChatMessages(chatHistory, userMessage);
+  const memoryContext = formatRetrievedMemoryContext(retrievedMemories, memoryContextMaxChars);
+
+  logger.info(
+    '[chat.llm.context]' +
+      JSON.stringify({
+        message: userMessage,
+        pulled: {
+          recentChannelContext: chatHistory,
+          relevantMemory: retrievedMemories,
+        },
+        sentToLlm: {
+          userContext: userContext ?? null,
+          serverContext,
+          memoryContext,
+          messages,
+        },
+      }),
+  );
 
   return generateText({
     model: getWaveModel(model),

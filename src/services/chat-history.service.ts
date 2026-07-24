@@ -1,7 +1,7 @@
 import type { Message } from 'discord.js';
 import type { ChatMessage } from '@/services/chat.service.js';
 
-export const CHAT_HISTORY_LIMIT = 6;
+export const CHAT_HISTORY_LIMIT = 20;
 export const CHAT_HISTORY_PAGE_SIZE = 100;
 export const CHAT_HISTORY_SCAN_LIMIT = 500;
 
