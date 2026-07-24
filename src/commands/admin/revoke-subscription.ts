@@ -24,9 +24,15 @@ const RevokeSubscriptionCommand: SlashCommand = {
   execute: async (interaction: ChatInputCommandInteraction): Promise<void> => {
     // Check if user is admin
     if (!interaction.client.isBotDevAdmin(interaction)) {
-      await logger.error('User is not an admin', new Error(), {
-        context: { userId: interaction.user.id, guildId: interaction.guildId ?? undefined },
-      });
+      await logger.error(
+        {
+          event: 'chat.command.failed',
+          guildId: interaction.guildId,
+          userId: interaction.user.id,
+          err: new Error(),
+        },
+        'User is not an admin',
+      );
 
       await interaction.reply({
         content: '❌ This command is restricted to bot administrators only.',
@@ -44,9 +50,15 @@ const RevokeSubscriptionCommand: SlashCommand = {
       let premiumInfo = await PremiumInfoDAL.getPremiumInfoByGuildId(guildId);
 
       if (!premiumInfo) {
-        await logger.error('No premium information found for guild ID', new Error(), {
-          context: { userId: interaction.user.id, guildId, guildName: interaction.guild?.name },
-        });
+        await logger.error(
+          {
+            event: 'premium.subscription.revoked',
+            guildId,
+            userId: interaction.user.id,
+            err: new Error(),
+          },
+          'No premium information found for guild ID',
+        );
         // initialize premium info
         premiumInfo = await PremiumInfoDAL.initializeServerPremium(guildId);
       }
@@ -68,9 +80,15 @@ const RevokeSubscriptionCommand: SlashCommand = {
       });
 
       if (!updatedInfo) {
-        await logger.error('Failed to revoke subscription', new Error(), {
-          context: { userId: interaction.user.id, guildId, guildName: interaction.guild?.name },
-        });
+        await logger.error(
+          {
+            event: 'admin.subscription.revoke.failed',
+            guildId,
+            userId: interaction.user.id,
+            err: new Error(),
+          },
+          'Failed to revoke subscription',
+        );
         await interaction.editReply(`❌ Failed to revoke subscription for guild ID: ${guildId}`);
         return;
       }
@@ -80,21 +98,26 @@ const RevokeSubscriptionCommand: SlashCommand = {
 
       // Log the action
       await logger.info(
-        `Subscription revoked for guild ${guildId}. Previous status: ${currentStatus}`,
         {
-          context: {
-            userId: interaction.user.id,
-            guildId,
-            guildName: interaction.guild?.name,
-          },
+          event: 'admin.subscription.revoke.completed',
+          guildId,
+          userId: interaction.user.id,
+          status: currentStatus,
         },
+        `Subscription revoked for guild ${guildId}. Previous status: ${currentStatus}`,
       );
 
       await interaction.editReply(`✅ Successfully revoked ${currentStatus} for guild ${guildId}.`);
     } catch (error) {
-      await logger.error('Error revoking subscription', error as Error, {
-        context: { userId: interaction.user.id, guildId, guildName: interaction.guild?.name },
-      });
+      await logger.error(
+        {
+          event: 'admin.subscription.revoke.failed',
+          guildId,
+          userId: interaction.user.id,
+          err: error as Error,
+        },
+        'Error revoking subscription',
+      );
       await interaction.editReply(`❌ Failed to revoke subscription: ${(error as Error).message}`);
     }
   },

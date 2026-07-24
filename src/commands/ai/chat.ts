@@ -1,7 +1,6 @@
 import {
   SlashCommandBuilder,
   type ChatInputCommandInteraction,
-  TextChannel,
   MessageFlags,
   GuildMember,
 } from 'discord.js';
@@ -9,12 +8,35 @@ import type { SlashCommand } from '../../config/command-handler';
 
 import { createAnnouncementTool } from '@/ai-tools/announcement.js';
 import { createPollTool } from '@/ai-tools/poll.js';
+import { getMemoryConfig } from '@/config/memory.js';
 import { getOrCreateAgentConfig } from '@/db/aiAgentConfig.dal.js';
+import {
+  getNormalizedAgentConfig,
+  normalizeAgentConfig,
+  type NormalizedAgentConfig,
+} from '@/services/agent-config.service.js';
 import {
   handleChatMessageGeneration,
   type ChatMessage,
   type UserContext,
 } from '@/services/chat.service.js';
+import { fetchRecentHumanChatHistory } from '@/services/chat-history.service.js';
+import { retrieveUserMemories, type RetrievedMemory } from '@/services/user-memory.service.js';
+import { logger } from '@/utils/logger.js';
+
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<T>((_resolve, reject) => {
+        timeout = setTimeout(() => reject(new Error('MEMORY_CONFIG_TIMEOUT')), timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timeout) clearTimeout(timeout);
+  }
+}
 
 export const ChatCommand: SlashCommand = {
   name: 'chat',
@@ -37,61 +59,102 @@ export const ChatCommand: SlashCommand = {
     }
 
     const userMessage = interaction.options.getString('message', true);
+    const deploymentMemoryEnabled = getMemoryConfig().MEMORY_FEATURE_ENABLED;
+    let runtimeMemoryConfig: NormalizedAgentConfig | undefined;
+    let memoryStateKnown = !deploymentMemoryEnabled;
+    if (deploymentMemoryEnabled) {
+      try {
+        runtimeMemoryConfig = await withTimeout(getNormalizedAgentConfig(guild.id), 1000);
+        memoryStateKnown = true;
+      } catch (error) {
+        logger.warn(
+          {
+            event: 'memory.config.command_read.degraded',
+            guildId: guild.id,
+            errorName: error instanceof Error ? error.name : 'UnknownError',
+          },
+          'Memory configuration was unavailable before chat acknowledgement',
+        );
+      }
+    }
+    const privateReply =
+      deploymentMemoryEnabled && (!memoryStateKnown || runtimeMemoryConfig?.memoryEnabled === true);
 
-    // Defer reply since AI generation may take a while
-    await interaction.deferReply();
+    if (privateReply) {
+      await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
+    } else {
+      await interaction.deferReply();
+    }
 
     try {
       // Load per-server agent config
       const config = await getOrCreateAgentConfig(guild.id);
+      runtimeMemoryConfig ??= normalizeAgentConfig(config);
 
       // Build user context from the invoking member
-      const member = interaction.member;
+      const member =
+        interaction.member instanceof GuildMember
+          ? interaction.member
+          : await guild.members.fetch(interaction.user.id).catch(() => undefined);
       const userContext: UserContext = {
         name: interaction.user.globalName ?? interaction.user.username,
-        roles:
-          member instanceof GuildMember
-            ? Array.from(member.roles.cache.values())
-                .filter((r) => r.name !== '@everyone')
-                .map((r) => r.name)
-            : [],
+        roles: member
+          ? Array.from(member.roles.cache.values())
+              .filter((role) => role.name !== '@everyone')
+              .map((role) => role.name)
+          : [],
       };
 
-      // Fetch prior channel messages as typed user/assistant history
+      // Fetch prior channel messages as the six latest eligible human messages (user role only)
       let chatHistory: ChatMessage[] = [];
-      if (interaction.channel instanceof TextChannel) {
-        // Fetch recent messages; slash-command interactions don't create
-        // a real channel message, so no need to exclude by ID.
-        const fetched = await interaction.channel.messages.fetch({
-          limit: 20,
-        });
+      try {
+        chatHistory = await fetchRecentHumanChatHistory(interaction.channel);
+      } catch (error) {
+        logger.warn(
+          {
+            event: 'chat.history.degraded',
+            guildId: guild.id,
+            channelId: interaction.channelId,
+            errorName: error instanceof Error ? error.name : 'UnknownError',
+          },
+          'Recent channel history was unavailable',
+        );
+        chatHistory = [];
+      }
 
-        // Messages arrive newest-first; reverse to chronological order.
-        const chronological = Array.from(fetched.values()).reverse();
-
-        // Build user/assistant pairs.
-        // A "user" message is any non-bot message.
-        // An "assistant" message is a bot reply that immediately follows a user message.
-        for (let i = 0; i < chronological.length; i++) {
-          const msg = chronological[i];
-          if (msg.author.bot) continue; // skip standalone bot messages
-
-          // This is a human message
-          const next = chronological[i + 1];
-          const botReply = next && next.author.bot ? next.content : null;
-
-          chatHistory.push({ role: 'user', content: msg.content });
-          if (botReply) {
-            chatHistory.push({
-              role: 'assistant',
-              content: botReply,
-            });
-          }
+      let retrievedMemories: RetrievedMemory[] = [];
+      if (deploymentMemoryEnabled && runtimeMemoryConfig.memoryEnabled && member) {
+        const retrievalStartedAt = Date.now();
+        try {
+          retrievedMemories = await retrieveUserMemories({
+            guild,
+            member,
+            userId: interaction.user.id,
+            query: userMessage,
+            config: runtimeMemoryConfig,
+          });
+          logger.info(
+            {
+              event: 'memory.retrieval.completed',
+              guildId: guild.id,
+              userId: interaction.user.id,
+              memoryCount: retrievedMemories.length,
+              durationMs: Date.now() - retrievalStartedAt,
+            },
+            'Relevant user memory retrieved',
+          );
+        } catch (error) {
+          logger.warn(
+            {
+              event: 'memory.retrieval.degraded',
+              guildId: guild.id,
+              userId: interaction.user.id,
+              durationMs: Date.now() - retrievalStartedAt,
+              errorName: error instanceof Error ? error.name : 'UnknownError',
+            },
+            'Chat is continuing without long-term memory',
+          );
         }
-
-        // Keep last 10 turns (user+assistant counted separately) to
-        // avoid bloating the context window.
-        chatHistory = chatHistory.slice(-10);
       }
 
       const owner = await guild
@@ -123,6 +186,8 @@ export const ChatCommand: SlashCommand = {
           owner,
         },
         chatHistory,
+        retrievedMemories,
+        memoryContextMaxChars: getMemoryConfig().MEMORY_CONTEXT_MAX_CHARS,
         temperature: config.temperature,
         maxOutputTokens: 5000,
         tools,
@@ -134,13 +199,25 @@ export const ChatCommand: SlashCommand = {
         const chunks = splitMessage(response, 2000);
         await interaction.editReply(chunks[0]);
         for (let i = 1; i < chunks.length; i++) {
-          await interaction.followUp(chunks[i]);
+          await interaction.followUp(
+            privateReply
+              ? { content: chunks[i], flags: [MessageFlags.Ephemeral] }
+              : { content: chunks[i] },
+          );
         }
       } else {
         await interaction.editReply(response || '_(No response generated)_');
       }
     } catch (error) {
-      console.error('❌ Chat command error:', error);
+      logger.error(
+        {
+          event: 'chat.command.failed',
+          guildId: guild.id,
+          userId: interaction.user.id,
+          errorName: error instanceof Error ? error.name : 'UnknownError',
+        },
+        'Chat command failed',
+      );
       await interaction.editReply(
         '❌ Something went wrong while generating a response. Please try again.',
       );

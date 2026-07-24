@@ -72,7 +72,7 @@ export const handleAddOrUpdateProductModal = async (
     });
 
     if (!validationResult.success) {
-      const errorMessage = validationResult.error.errors
+      const errorMessage = validationResult.error.issues
         .map((err) => `${err.path.join('.')}: ${err.message}`)
         .join('\n');
 

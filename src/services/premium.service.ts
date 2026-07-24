@@ -3,7 +3,7 @@ import { redis } from '@/utils/redis';
 import { PremiumInfoDAL, PremiumInfoModel } from '@/db/premium-info.dal';
 import type mongoose from 'mongoose';
 
-const CACHE_TTL = 8 * 3600; // 1 hour in seconds
+const CACHE_TTL = 8 * 3600; // 8 hours in seconds
 
 type PremiumInfo = Omit<PremiumInfoDocument, keyof mongoose.Document>;
 
@@ -68,7 +68,7 @@ export const updatePremiumStatusCacheForGuild = async (guildId: string): Promise
   await cachePremiumInfo(guildId, premiumInfo);
 };
 
-// Run every hour
+// Refresh premium status for accounts near an expiry boundary.
 export const updatePremiumStatusCache = async () => {
   // Get all servers with active premium/trials that are about to expire
   const now = new Date();

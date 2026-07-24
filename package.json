@@ -38,8 +38,11 @@
   "description": "Discord bot for ecommerce",
   "dependencies": {
     "@ai-sdk/openai-compatible": "^2.0.35",
+    "@logtail/pino": "^0.5.8",
+    "@qdrant/js-client-rest": "^1.18.0",
     "@types/luxon": "^3.6.2",
     "ai": "^6.0.116",
+    "bullmq": "^5.80.10",
     "date-fns": "^4.1.0",
     "discord.js": "^14.19.3",
     "dotenv": "^16.3.1",
@@ -49,7 +52,8 @@
     "lru-cache": "^11.1.0",
     "mongoose": "^8.13.2",
     "nanoid": "^5.1.5",
-    "node-cron": "^3.0.3"
+    "node-cron": "^3.0.3",
+    "pino": "^10.3.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.24.0",
@@ -63,10 +67,5 @@
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.29.0",
     "zod": "^4.3.6"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild"
-    ]
   }
 }

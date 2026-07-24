@@ -33,9 +33,15 @@ const ExtendTrialCommand: SlashCommand = {
   execute: async (interaction: ChatInputCommandInteraction): Promise<void> => {
     // Check if user is admin
     if (!interaction.client.isBotDevAdmin(interaction)) {
-      await logger.error('User is not an admin', new Error(), {
-        context: { userId: interaction.user.id, guildId: interaction.guildId ?? undefined },
-      });
+      await logger.error(
+        {
+          event: 'chat.command.failed',
+          guildId: interaction.guildId,
+          userId: interaction.user.id,
+          err: new Error(),
+        },
+        'User is not an admin',
+      );
 
       await interaction.reply({
         content: '❌ This command is restricted to bot administrators only.',
@@ -80,21 +86,27 @@ const ExtendTrialCommand: SlashCommand = {
 
       // Log the action
       await logger.info(
-        `Trial extended for guild ${guildId} by ${daysToExtend} days. New end date: ${newEndDate.toISOString()}`,
         {
-          context: {
-            userId: interaction.user.id,
-            guildId,
-            guildName: interaction.guild?.name,
-          },
+          event: 'admin.trial.extend.completed',
+          guildId,
+          userId: interaction.user.id,
+          days: daysToExtend,
         },
+        `Trial extended for guild ${guildId} by ${daysToExtend} days. New end date: ${newEndDate.toISOString()}`,
       );
 
       await interaction.editReply(
         `✅ Trial extended for guild ${guildId} by ${daysToExtend} days. New end date: ${newEndDate.toLocaleDateString()}`,
       );
     } catch (error) {
-      console.error('Error extending trial:', error);
+      await logger.error(
+        {
+          event: 'admin.trial.extend.failed',
+          guildId,
+          err: error as Error,
+        },
+        'Error extending trial',
+      );
       await interaction.editReply(`❌ Failed to extend trial: ${(error as Error).message}`);
     }
   },

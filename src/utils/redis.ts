@@ -1,19 +1,28 @@
 import { StoreConfigDAL } from '@/db/storeConfig.dal';
+import { logger } from '@/utils/logger';
 import { Redis } from 'ioredis';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-const redisUrl = process.env.REDIS_URL || '';
+const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
 
-const redis = new Redis(redisUrl);
+const redis = new Redis(redisUrl, { lazyConnect: true });
 
 redis.on('error', (err) => {
-  console.error('Redis error', err);
+  logger.error(
+    {
+      event: 'redis.connection.error',
+      errorCode:
+        'code' in err && typeof err.code === 'string' ? err.code : 'redis_connection_error',
+      errorName: err.name,
+    },
+    'Redis connection error',
+  );
 });
 
 redis.on('connect', () => {
-  console.log('✅ Redis connected');
+  logger.info({ event: 'redis.connected' }, 'Redis connected');
 });
 
 const storeConfigKey = 'storeConfigs:';
@@ -21,6 +30,12 @@ const storeConfigKey = 'storeConfigs:';
 export type StoreConfig = {
   botAdminRoleId: string;
   currency: string;
+};
+
+const connectToRedis = async () => {
+  if (redis.status === 'wait') {
+    await redis.connect();
+  }
 };
 
 const loadStoreConfigsIntoCache = async () => {
@@ -36,7 +51,10 @@ const loadStoreConfigsIntoCache = async () => {
   for (const config of formattedConfigs) {
     await redis.set(`${storeConfigKey}${config.key}`, JSON.stringify(config.value));
   }
-  console.log('✅ Store configs loaded into cache');
+  logger.info(
+    { event: 'redis.store_configs.loaded', configCount: formattedConfigs.length },
+    'Store configs loaded into cache',
+  );
 };
 
 const getStoreConfigFromCache = async (guildId: string) => {
@@ -59,9 +77,14 @@ const getStoreConfigFromCache = async (guildId: string) => {
 };
 
 const setStoreConfigInCache = async (guildId: string, config: StoreConfig) => {
-  console.log('Setting store config in cache', guildId, config);
-  const result = await redis.set(`${storeConfigKey}${guildId}`, JSON.stringify(config));
-  console.log('Result', result);
+  await redis.set(`${storeConfigKey}${guildId}`, JSON.stringify(config));
+  logger.info({ event: 'redis.store_config.updated', guildId }, 'Store config cache updated');
 };
 
-export { redis, loadStoreConfigsIntoCache, getStoreConfigFromCache, setStoreConfigInCache };
+export {
+  redis,
+  connectToRedis,
+  loadStoreConfigsIntoCache,
+  getStoreConfigFromCache,
+  setStoreConfigInCache,
+};

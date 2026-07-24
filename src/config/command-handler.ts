@@ -31,6 +31,7 @@ export interface SlashCommand {
   description: string;
   data: SlashCommandBuilder;
   isGuildOnly?: boolean;
+  deferBeforePermissionChecks?: boolean;
   allowedGuildIds?: string[];
   requiredPermissions: (typeof CommandPermissions)[keyof typeof CommandPermissions][];
   execute: (

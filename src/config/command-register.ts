@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion -- we know the env is set */
 import { REST, Routes } from 'discord.js';
+import { logger } from '@/utils/logger';
 import { rawBotCommands, type SlashCommand } from './command-handler';
 
 export async function registerCommands(): Promise<void> {
@@ -11,7 +12,13 @@ export async function registerCommands(): Promise<void> {
 
   const rest = new REST().setToken(process.env.DISCORD_BOT_TOKEN!);
   try {
-    console.log(`Started refreshing ${rawBotCommands.length} application (/) commands.`);
+    logger.info(
+      {
+        event: 'discord.commands.registration.started',
+        commandCount: rawBotCommands.length,
+      },
+      `Started refreshing ${rawBotCommands.length} application (/) commands.`,
+    );
 
     const commandsJson = rawBotCommands.map((command) => command.data.toJSON());
 
@@ -20,9 +27,18 @@ export async function registerCommands(): Promise<void> {
       body: commandsJson,
     })) as SlashCommand[];
 
-    console.log(`Successfully reloaded ${data.length} slash(/) commands.`);
+    logger.info(
+      {
+        event: 'discord.commands.registration.completed',
+        commandCount: data.length,
+      },
+      `Successfully reloaded ${data.length} slash(/) commands.`,
+    );
   } catch (error) {
     // And of course, make sure you catch and log any errors!
-    console.error(error);
+    logger.error({
+      event: 'discord.commands.registration.failed',
+      err: error as Error,
+    }, 'Failed to register commands');
   }
 }

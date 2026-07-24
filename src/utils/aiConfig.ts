@@ -1,6 +1,7 @@
 import 'dotenv/config';
 
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
+import type { LanguageModel } from 'ai';
 
 export const WAVE_MODEL_ID = process.env.WANDB_MODEL ?? 'coreweave/moonshotai/Kimi-K2.6';
 export const WAVE_TIMEOUT_MS = Number(process.env.WANDB_TIMEOUT ?? 120) * 1_000;
@@ -219,9 +220,9 @@ export const wave = createOpenAICompatible({
 });
 
 /** The default Kimi model, ready for `generateText`, `streamText`, and AI SDK agents. */
-export const waveModel = wave(WAVE_MODEL_ID);
+export const waveModel: LanguageModel = wave(WAVE_MODEL_ID);
 
 /** Get another W&B-hosted model using the same transport. */
-export function getWaveModel(modelId = WAVE_MODEL_ID) {
+export function getWaveModel(modelId = WAVE_MODEL_ID): LanguageModel {
   return wave(modelId);
 }

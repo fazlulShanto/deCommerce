@@ -5,12 +5,23 @@ import type { Guild } from 'discord.js';
 export const handleGuildCreate = async (guild: Guild) => {
   try {
     await PremiumInfoDAL.initializeServerPremium(guild.id);
-    await logger.info(`✅ Added server ${guild.name} to database`, {
-      context: { guildId: guild.id, guildName: guild.name },
-    });
+    await logger.info(
+      {
+        event: 'guild.joined',
+        guildId: guild.id,
+        guildName: guild.name,
+      },
+      `✅ Added server ${guild.name} to database`,
+    );
   } catch (error) {
-    await logger.error(`❌ Failed to add server ${guild.name} to database:`, error as Error, {
-      context: { guildId: guild.id, guildName: guild.name },
-    });
+    await logger.error(
+      {
+        event: 'guild.join.failed',
+        guildId: guild.id,
+        guildName: guild.name,
+        err: error as Error,
+      },
+      `❌ Failed to add server ${guild.name} to database:`,
+    );
   }
 };

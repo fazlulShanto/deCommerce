@@ -3,11 +3,71 @@ import {
   ActionRowBuilder,
   MessageFlags,
   StringSelectMenuBuilder,
+  type ChatInputCommandInteraction,
   type Interaction,
 } from 'discord.js';
 import { handleModalSubmit } from '@/handlers/modal-handlers';
 import { handleButtonInteractions } from '@/handlers/btn-interaction-handlers';
 import { getStoreConfigFromCache } from '@/utils/redis';
+import { logger } from '@/utils/logger';
+
+function discordErrorCode(error: unknown): number | undefined {
+  if (!error || typeof error !== 'object' || !('code' in error)) {
+    return undefined;
+  }
+  const code = Number(error.code);
+  return Number.isInteger(code) ? code : undefined;
+}
+
+async function safelyReportCommandError(
+  interaction: ChatInputCommandInteraction,
+  error: unknown,
+): Promise<void> {
+  const errorCode = discordErrorCode(error);
+  if (errorCode === 10062) {
+    logger.warn(
+      {
+        event: 'discord.interaction.expired',
+        commandName: interaction.commandName,
+        guildId: interaction.guildId,
+        errorCode,
+      },
+      'Discord interaction expired before it could be acknowledged',
+    );
+    return;
+  }
+
+  const response = {
+    content: 'There was an error while executing this command!',
+  };
+  try {
+    if (interaction.deferred && !interaction.replied) {
+      await interaction.editReply(response);
+    } else if (interaction.replied) {
+      await interaction.followUp({
+        ...response,
+        flags: [MessageFlags.Ephemeral],
+      });
+    } else {
+      await interaction.reply({
+        ...response,
+        flags: [MessageFlags.Ephemeral],
+      });
+    }
+  } catch (responseError) {
+    logger.error(
+      {
+        event: 'discord.command.error_response.failed',
+        commandName: interaction.commandName,
+        guildId: interaction.guildId,
+        errorCode: discordErrorCode(responseError),
+        errorName: responseError instanceof Error ? responseError.name : 'UnknownError',
+      },
+      'Discord command error response failed',
+    );
+  }
+}
+
 const handleInteractionCreate = async (interaction: Interaction) => {
   if (!interaction.guildId || !interaction.member) {
     return;
@@ -16,17 +76,13 @@ const handleInteractionCreate = async (interaction: Interaction) => {
   if (interaction.isChatInputCommand()) {
     const command = interaction.client.commands.get(interaction.commandName);
     if (!command) return;
-    const storeConfig = await getStoreConfigFromCache(interaction.guildId);
     try {
+      if (command.deferBeforePermissionChecks && !interaction.deferred && !interaction.replied) {
+        await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
+      }
+
       const isBotAdminRequired = command.requiredPermissions.includes('BotAdmin');
       const isPremiumOrTrialRequired = command.requiredPermissions.includes('PremiumOrTrial');
-
-      if (isPremiumOrTrialRequired) {
-        const hasPremiumOrTrial = await interaction.client.isPremiumOrTrial(interaction);
-        if (!hasPremiumOrTrial) {
-          return;
-        }
-      }
 
       if (isBotAdminRequired) {
         const isBotAdmin = await interaction.client.isBotAdmin(interaction);
@@ -34,17 +90,34 @@ const handleInteractionCreate = async (interaction: Interaction) => {
           return;
         }
       }
-      command.execute(interaction, {
+
+      if (isPremiumOrTrialRequired) {
+        const hasPremiumOrTrial = await interaction.client.isPremiumOrTrial(interaction);
+        if (!hasPremiumOrTrial) {
+          return;
+        }
+      }
+      const storeConfig = await getStoreConfigFromCache(interaction.guildId);
+      await command.execute(interaction, {
         botAdminRoleId: storeConfig?.botAdminRoleId,
         currency: storeConfig?.currency,
       });
     } catch (error) {
-      console.error(error);
-      interaction.reply({
-        content: 'There was an error while executing this command!',
-        flags: [MessageFlags.Ephemeral],
-      });
+      if (discordErrorCode(error) !== 10062) {
+        logger.error(
+          {
+            event: 'discord.command.execution.failed',
+            commandName: interaction.commandName,
+            guildId: interaction.guildId,
+            errorCode: discordErrorCode(error),
+            errorName: error instanceof Error ? error.name : 'UnknownError',
+          },
+          'Discord command execution failed',
+        );
+      }
+      await safelyReportCommandError(interaction, error);
     }
+    return;
   }
 
   if (interaction.isAutocomplete()) {
@@ -56,7 +129,15 @@ const handleInteractionCreate = async (interaction: Interaction) => {
       }
       return;
     } catch (error) {
-      console.error('Error handling autocomplete:', error);
+      logger.error(
+        {
+          event: 'discord.autocomplete.failed',
+          commandName: interaction.commandName,
+          guildId: interaction.guildId,
+          err: error,
+        },
+        'Discord autocomplete failed',
+      );
     }
   }
 
@@ -67,12 +148,11 @@ const handleInteractionCreate = async (interaction: Interaction) => {
 
   if (interaction.isStringSelectMenu()) {
     // const command = interaction.client.commands.get(interaction.customId);
-    console.log('interaction.values', interaction.values, 'custom_id', interaction.customId);
-
     // disable the button
-    const updatedComponents = interaction.message.components.map((row) => {
+    const updatedComponents = interaction.message.components.flatMap((row) => {
+      if (!('components' in row)) return [];
       const newComponents = row.components.map((component) => {
-        if (component.customId === interaction.customId) {
+        if ('customId' in component && component.customId === interaction.customId) {
           return StringSelectMenuBuilder.from(component as unknown as StringSelectMenuBuilder)
             .setDisabled(true)
             .setPlaceholder(interaction.values.join(', '));
